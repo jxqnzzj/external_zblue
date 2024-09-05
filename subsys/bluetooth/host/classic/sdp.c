@@ -1850,7 +1850,7 @@ static uint16_t get_ss_record_len(struct net_buf *buf)
 	return 0;
 }
 
-static uint16_t get_ssa_record_len(struct net_buf *buf)
+static uint16_t get_ssa_sa_record_len(struct net_buf *buf)
 {
 	uint16_t len;
 	uint8_t seq;
@@ -1891,13 +1891,13 @@ static uint16_t get_record_len(struct bt_sdp_client *session)
 	case BT_SDP_DISCOVER_SERVICE_SEARCH:
 		len = get_ss_record_len(buf);
 		break;
-	case BT_SDP_DISCOVER_SERVICE_SEARCH_ATTR:
-		len = get_ssa_record_len(buf);
-		break;
 	case BT_SDP_DISCOVER_SERVICE_ATTR:
+		__fallthrough;
+	case BT_SDP_DISCOVER_SERVICE_SEARCH_ATTR:
+		len = get_ssa_sa_record_len(buf);
+		break;
 	default:
 		len = buf->len;
-		break;
 	}
 
 	LOG_DBG("Record len %u", len);
@@ -2182,8 +2182,6 @@ static int sdp_client_receive(struct bt_l2cap_chan *chan, struct net_buf *buf)
 	case BT_SDP_SVC_SEARCH_ATTR_RSP:
 		return sdp_client_receive_ssa_sa(session, buf);
 	case BT_SDP_ERROR_RSP:
-		LOG_INF("Invalid SDP request");
-		sdp_client_notify_result(session, UUID_NOT_RESOLVED);
 		sdp_client_params_iterator(session);
 		return 0;
 	default:
@@ -2234,15 +2232,6 @@ static void sdp_client_disconnected(struct bt_l2cap_chan *chan)
 	struct bt_sdp_client *session = SDP_CLIENT_CHAN(chan);
 
 	LOG_DBG("session %p chan %p disconnected", session, chan);
-
-	if (session->param) {
-		if (session->param->disconnected) {
-			session->param->disconnected(chan->conn, session->param);
-		}
-
-		/* Invalidate cached param in context */
-		session->param = NULL;
-	}
 
 	if (session->rec_buf) {
 		net_buf_unref(session->rec_buf);
