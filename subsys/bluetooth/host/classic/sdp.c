@@ -2182,6 +2182,8 @@ static int sdp_client_receive(struct bt_l2cap_chan *chan, struct net_buf *buf)
 	case BT_SDP_SVC_SEARCH_ATTR_RSP:
 		return sdp_client_receive_ssa_sa(session, buf);
 	case BT_SDP_ERROR_RSP:
+		LOG_INF("Invalid SDP request");
+		sdp_client_notify_result(session, UUID_NOT_RESOLVED);
 		sdp_client_params_iterator(session);
 		return 0;
 	default:
