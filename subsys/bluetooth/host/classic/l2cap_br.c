@@ -315,7 +315,9 @@ int bt_l2cap_br_send_cb(struct bt_conn *conn, uint16_t cid, struct net_buf *buf,
 		return -ESHUTDOWN;
 	}
 
-	LOG_DBG("chan %p buf %p len %zu", br_chan, buf, buf->len);
+	br_chan = CONTAINER_OF(ch, struct bt_l2cap_br_chan, chan);
+
+	LOG_DBG("chan %p buf %p len %u", br_chan, buf, buf->len);
 
 	hdr = net_buf_push(buf, sizeof(*hdr));
 	hdr->len = sys_cpu_to_le16(buf->len - sizeof(*hdr));

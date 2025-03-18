@@ -1632,7 +1632,7 @@ static int rfcomm_recv(struct bt_l2cap_chan *chan, struct net_buf *buf)
 	}
 
 	if (buf->len < (hdr_len + msg_len + sizeof(fcs))) {
-		LOG_ERR("Too small RFCOMM information (%d < %d)", buf->len,
+		LOG_ERR("Too small RFCOMM information (%u < %zu)", buf->len,
 			hdr_len + msg_len + sizeof(fcs));
 		return 0;
 	}
