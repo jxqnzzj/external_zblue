@@ -22,6 +22,12 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(bt_br);
 
+enum __packed resolve_name_state {
+	RESOLVE_REMOTE_NAME_PENDING,
+	RESOLVE_REMOTE_NAME_RESOLVING,
+	RESOLVE_REMOTE_NAME_RESOLVED,
+};
+
 int bt_reject_conn(struct bt_dev *hdev, const bt_addr_t *bdaddr, uint8_t reason)
 {
 	struct bt_hci_cp_reject_conn_req *cp;
@@ -363,11 +369,19 @@ void bt_br_discovery_reset(struct bt_dev *hdev)
 	hdev->discovery_results_count = 0;
 }
 
-static void report_discovery_results(struct bt_dev *hdev)
+void bt_br_discovery_clear_callbacks(struct bt_dev *hdev)
 {
-	bool resolving_names = false;
+	if (!hdev) {
+		return;
+	}
+
+	sys_slist_init(&hdev->discovery_cbs);
+}
+
+static bool check_request_name(struct bt_dev *hdev)
+{
 	int i;
-	struct bt_br_discovery_cb *listener, *next;
+	bool resolving_names = false;
 
 	for (i = 0; i < hdev->discovery_results_count; i++) {
 		struct bt_br_discovery_priv *priv;
@@ -378,16 +392,37 @@ static void report_discovery_results(struct bt_dev *hdev)
 			continue;
 		}
 
-		if (request_name(hdev, &hdev->discovery_results[i].addr, priv->pscan_rep_mode,
-				 priv->clock_offset)) {
+		if (priv->resolve_state != RESOLVE_REMOTE_NAME_PENDING) {
 			continue;
 		}
 
-		priv->resolving = true;
+		if (request_name(hdev, &hdev->discovery_results[i].addr, priv->pscan_rep_mode,
+				 priv->clock_offset)) {
+			priv->resolve_state = RESOLVE_REMOTE_NAME_RESOLVED;
+			continue;
+		}
+
+		priv->resolve_state = RESOLVE_REMOTE_NAME_RESOLVING;
 		resolving_names = true;
+		break;
 	}
 
-	if (resolving_names) {
+	return resolving_names;
+}
+
+static void report_discovery_results(struct bt_dev *hdev)
+{
+	int i;
+	struct bt_br_discovery_cb *listener, *next;
+
+	for (i = 0; i < hdev->discovery_results_count; i++) {
+		struct bt_br_discovery_priv *priv;
+
+		priv = &hdev->discovery_results[i]._priv;
+		priv->resolve_state = RESOLVE_REMOTE_NAME_PENDING;
+	}
+
+	if (check_request_name(hdev)) {
 		return;
 	}
 
@@ -562,7 +597,6 @@ void bt_hci_remote_name_request_complete(struct bt_dev *hdev, struct net_buf *bu
 	struct bt_br_discovery_priv *priv;
 	int eir_len = 240;
 	uint8_t *eir;
-	int i;
 	struct bt_br_discovery_cb *listener, *next;
 
 	if (hdev->rnr_cb.cb && !bt_addr_cmp(&evt->bdaddr, &hdev->rnr_cb.addr)) {
@@ -577,7 +611,7 @@ void bt_hci_remote_name_request_complete(struct bt_dev *hdev, struct net_buf *bu
 	}
 
 	priv = &result->_priv;
-	priv->resolving = false;
+	priv->resolve_state = RESOLVE_REMOTE_NAME_RESOLVED;
 
 	if (evt->status) {
 		goto check_names;
@@ -629,15 +663,9 @@ void bt_hci_remote_name_request_complete(struct bt_dev *hdev, struct net_buf *bu
 	}
 
 check_names:
-	/* if still waiting for names */
-	for (i = 0; i < hdev->discovery_results_count; i++) {
-		struct bt_br_discovery_priv *dpriv;
-
-		dpriv = &hdev->discovery_results[i]._priv;
-
-		if (dpriv->resolving) {
-			return;
-		}
+	/* if still need to request name */
+	if (check_request_name(hdev)) {
+		return;
 	}
 
 	/* all names resolved, report discovery results */
@@ -1102,7 +1130,7 @@ int bt_br_discovery_stop_mc(uint8_t dev_id)
 
 		priv = &hdev->discovery_results[i]._priv;
 
-		if (!priv->resolving) {
+		if (priv->resolve_state != RESOLVE_REMOTE_NAME_RESOLVING) {
 			continue;
 		}
 
@@ -1515,14 +1543,21 @@ int bt_br_remote_name_request_mc(uint8_t dev_id, const bt_addr_t *bdaddr, bt_br_
 	/* check if we have a cached result */
 	result = find_discovery_result(hdev, bdaddr);
 	if (result) {
-		/* check is resolving, just return if resolving */
+        /* Already resolving or already resolved: no need to send again */
 		priv = (struct bt_br_discovery_priv *)&result->_priv;
-		if (priv->resolving) {
-			return 0;
+        if (priv->resolve_state == RESOLVE_REMOTE_NAME_RESOLVING ||
+            priv->resolve_state == RESOLVE_REMOTE_NAME_RESOLVED) {
+			memset(&hdev->rnr_cb, 0, sizeof(hdev->rnr_cb));
+            return 0;
+        }
+
+		priv->resolve_state = RESOLVE_REMOTE_NAME_RESOLVING;
+		err = request_name(hdev, bdaddr, priv->pscan_rep_mode, priv->clock_offset);
+
+		if (err) {
+			priv->resolve_state = RESOLVE_REMOTE_NAME_PENDING;
 		}
 
-		priv->resolving = 1;
-		err = request_name(hdev, bdaddr, priv->pscan_rep_mode, priv->clock_offset);
 	} else {
 		/* start discovery to resolve name by default param */
 		err = request_name(hdev, bdaddr, BT_HCI_PAGE_SCAN_REP_MODE_R2, 0);
