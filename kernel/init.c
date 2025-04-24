@@ -127,14 +127,14 @@ enum init_level {
 	INIT_LEVEL_PRE_KERNEL_2,
 	INIT_LEVEL_POST_KERNEL,
 	INIT_LEVEL_APPLICATION,
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	INIT_LEVEL_SMP,
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 };
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 extern const struct init_entry __init_SMP_start[];
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 
 /*
  * storage space for the interrupt stack
@@ -352,9 +352,9 @@ static void z_sys_init_run_level(enum init_level level)
 		__init_PRE_KERNEL_2_start,
 		__init_POST_KERNEL_start,
 		__init_APPLICATION_start,
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 		__init_SMP_start,
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 		/* End marker */
 		__init_end,
 	};
@@ -541,12 +541,12 @@ static void bg_thread_main(void *unused1, void *unused2, void *unused3)
 	__ASSERT_NO_MSG(arch_mem_coherent(&_kernel));
 #endif /* CONFIG_KERNEL_COHERENCE */
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	if (!IS_ENABLED(CONFIG_SMP_BOOT_DELAY)) {
 		z_smp_init();
 	}
 	z_sys_init_run_level(INIT_LEVEL_SMP);
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 
 #ifdef CONFIG_MMU
 	z_mem_manage_boot_finish();
@@ -600,9 +600,9 @@ static void init_idle_thread(int i)
 			  tname);
 	z_mark_thread_as_started(thread);
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	thread->base.is_idle = 1U;
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 }
 
 void z_init_cpu(int id)
@@ -657,7 +657,7 @@ static char *prepare_multithreading(void)
 	/* _kernel.ready_q is all zeroes */
 	z_sched_init();
 
-#ifndef CONFIG_SMP
+#ifndef CONFIG_ZBLUE_SMP
 	/*
 	 * prime the cache with the main thread since:
 	 *
@@ -668,7 +668,7 @@ static char *prepare_multithreading(void)
 	 *   to work as intended
 	 */
 	_kernel.ready_q.cache = &z_main_thread;
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 	stack_ptr = z_setup_new_thread(&z_main_thread, z_main_stack,
 				       K_THREAD_STACK_SIZEOF(z_main_stack),
 				       bg_thread_main,
@@ -773,7 +773,7 @@ FUNC_NORETURN void z_cstart(void)
 #endif
 	/* perform basic hardware initialization */
 	z_sys_init_run_level(INIT_LEVEL_PRE_KERNEL_1);
-#if defined(CONFIG_SMP)
+#if defined(CONFIG_ZBLUE_SMP)
 	arch_smp_init();
 #endif
 	z_sys_init_run_level(INIT_LEVEL_PRE_KERNEL_2);

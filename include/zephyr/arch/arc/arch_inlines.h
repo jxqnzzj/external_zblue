@@ -16,7 +16,7 @@
 
 static ALWAYS_INLINE _cpu_t *arch_curr_cpu(void)
 {
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	uint32_t core;
 
 	core = z_arc_v2_core_id();
@@ -24,7 +24,7 @@ static ALWAYS_INLINE _cpu_t *arch_curr_cpu(void)
 	return &_kernel.cpus[core];
 #else
 	return &_kernel.cpus[0];
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 }
 
 static ALWAYS_INLINE uint32_t arch_proc_id(void)

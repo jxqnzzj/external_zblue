@@ -629,7 +629,7 @@ int arm_gic_init(const struct device *dev)
 DEVICE_DT_INST_DEFINE(0, arm_gic_init, NULL, NULL, NULL,
 		      PRE_KERNEL_1, CONFIG_INTC_INIT_PRIORITY, NULL);
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 void arm_gic_secondary_init(void)
 {
 	__arm_gic_init();

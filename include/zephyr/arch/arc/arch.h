@@ -82,7 +82,7 @@
 #error "Unsupported configuration: ARC_FIRQ and ARC_HAS_SECURE"
 #endif
 
-#if defined(CONFIG_SMP) && !defined(CONFIG_MULTITHREADING)
+#if defined(CONFIG_ZBLUE_SMP) && !defined(CONFIG_MULTITHREADING)
 #error "Non-multithreading mode isn't supported on SMP targets"
 #endif
 

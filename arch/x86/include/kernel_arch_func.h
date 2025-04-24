@@ -18,7 +18,7 @@
 #ifndef _ASMLANGUAGE
 static inline bool arch_is_in_isr(void)
 {
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	/* On SMP, there is a race vs. the current CPU changing if we
 	 * are preempted.  Need to mask interrupts while inspecting
 	 * (note deliberate lack of gcc size suffix on the

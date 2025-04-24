@@ -31,10 +31,10 @@ static ALWAYS_INLINE void arch_kernel_init(void)
 #ifdef CONFIG_THREAD_LOCAL_STORAGE
 	__asm__ volatile ("li tp, 0");
 #endif
-#if defined(CONFIG_SMP) || defined(CONFIG_USERSPACE)
+#if defined(CONFIG_ZBLUE_SMP) || defined(CONFIG_USERSPACE)
 	csr_write(mscratch, &_kernel.cpus[0]);
 #endif
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	_kernel.cpus[0].arch.hartid = csr_read(mhartid);
 	_kernel.cpus[0].arch.online = true;
 #endif
@@ -83,7 +83,7 @@ FUNC_NORETURN void z_riscv_fatal_error_csf(unsigned int reason, const struct arc
 
 static inline bool arch_is_in_isr(void)
 {
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	unsigned int key = arch_irq_lock();
 	bool ret = arch_curr_cpu()->nested != 0U;
 

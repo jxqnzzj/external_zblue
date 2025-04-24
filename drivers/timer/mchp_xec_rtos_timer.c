@@ -15,7 +15,7 @@
 #include <cmsis_core.h>
 #include <zephyr/irq.h>
 
-BUILD_ASSERT(!IS_ENABLED(CONFIG_SMP), "XEC RTOS timer doesn't support SMP");
+BUILD_ASSERT(!IS_ENABLED(CONFIG_ZBLUE_SMP), "XEC RTOS timer doesn't support SMP");
 BUILD_ASSERT(CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC == 32768,
 	     "XEC RTOS timer HW frequency is fixed at 32768");
 

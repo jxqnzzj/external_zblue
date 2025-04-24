@@ -84,7 +84,7 @@ void k_thread_foreach_unlocked(k_thread_user_cb_t user_cb, void *user_data)
 
 }
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 void k_thread_foreach_filter_by_cpu(unsigned int cpu, k_thread_user_cb_t user_cb,
 				  void *user_data)
 {
@@ -140,4 +140,4 @@ void k_thread_foreach_unlocked_filter_by_cpu(unsigned int cpu, k_thread_user_cb_
 
 	k_spin_unlock(&z_thread_monitor_lock, key);
 }
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */

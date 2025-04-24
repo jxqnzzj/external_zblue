@@ -499,7 +499,7 @@ ZTEST(userspace_thread_stack, test_idle_stack)
 	}
 
 	int ret;
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	/* 1cpu test case, so all other CPUs are spinning with co-op
 	 * threads blocking them. _current_cpu triggers an assertion.
 	 */

@@ -129,7 +129,7 @@ void arch_flush_local_fpu(void)
 	}
 }
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 static void flush_owned_fpu(struct k_thread *thread)
 {
 	__ASSERT((csr_read(mstatus) & MSTATUS_IEN) == 0,
@@ -228,7 +228,7 @@ void z_riscv_fpu_trap(struct arch_esf *esf)
 		return;
 	}
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	/*
 	 * Make sure the FPU context we need isn't live on another CPU.
 	 * The current CPU's FPU context is NULL at this point.
@@ -272,7 +272,7 @@ static bool fpu_access_allowed(unsigned int exc_update_level)
 			 */
 			z_riscv_fpu_disable();
 			arch_flush_local_fpu();
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 			flush_owned_fpu(_current);
 #endif
 			z_riscv_fpu_load();
@@ -324,7 +324,7 @@ int arch_float_disable(struct k_thread *thread)
 	if (thread != NULL) {
 		unsigned int key = arch_irq_lock();
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 		flush_owned_fpu(thread);
 #else
 		if (thread == _current_cpu->arch.fpu_owner) {

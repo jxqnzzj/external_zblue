@@ -18,7 +18,7 @@
 #include <mec_btimer_api.h>
 #include <mec_rtimer_api.h>
 
-BUILD_ASSERT(!IS_ENABLED(CONFIG_SMP), "MCHP MEC5 ktimer doesn't support SMP");
+BUILD_ASSERT(!IS_ENABLED(CONFIG_ZBLUE_SMP), "MCHP MEC5 ktimer doesn't support SMP");
 BUILD_ASSERT(CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC == 32768,
 	     "MCHP MEC5 ktimer HW frequency is fixed at 32768");
 

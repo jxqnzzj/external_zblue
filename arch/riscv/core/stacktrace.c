@@ -233,7 +233,7 @@ static bool in_fatal_stack_bound(uintptr_t addr, const struct k_thread *const th
 
 	if ((thread == NULL) || arch_is_in_isr()) {
 		/* We were servicing an interrupt */
-		uint8_t cpu_id = IS_ENABLED(CONFIG_SMP) ? arch_curr_cpu()->id : 0U;
+		uint8_t cpu_id = IS_ENABLED(CONFIG_ZBLUE_SMP) ? arch_curr_cpu()->id : 0U;
 
 		return in_irq_stack_bound(addr, cpu_id);
 	}

@@ -54,7 +54,7 @@ bool z_x86_check_stack_bounds(uintptr_t addr, size_t size, uint16_t cs)
 		 * and are supposed to be on the interrupt stack */
 		int cpu_id;
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 		cpu_id = arch_curr_cpu()->id;
 #else
 		cpu_id = 0;

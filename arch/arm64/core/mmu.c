@@ -1312,7 +1312,7 @@ int arch_mem_domain_thread_add(struct k_thread *thread)
 	if (thread == _current) {
 		z_arm64_swap_ptables(thread);
 	} else {
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 		/* the thread could be running on another CPU right now */
 		z_arm64_mem_cfg_ipi();
 #endif

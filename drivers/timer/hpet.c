@@ -290,7 +290,7 @@ static void hpet_isr(const void *arg)
 	hpet_int_sts_set(TIMER0_INT_STS);
 #endif
 
-	if (IS_ENABLED(CONFIG_SMP) &&
+	if (IS_ENABLED(CONFIG_ZBLUE_SMP) &&
 	    IS_ENABLED(CONFIG_QEMU_TARGET)) {
 		/* Qemu in SMP mode has observed the clock going
 		 * "backwards" relative to interrupts already received

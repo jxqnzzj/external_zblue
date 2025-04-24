@@ -61,7 +61,7 @@ static void ipc_isr(void *arg)
 	IDC[cpu_id].agents[0].ipc.tdr = INTEL_ADSP_IPC_BUSY;
 	IDC[cpu_id].agents[0].ipc.tda = 0;
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	void z_sched_ipi(void);
 	z_sched_ipi();
 #endif

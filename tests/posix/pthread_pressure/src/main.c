@@ -58,7 +58,7 @@ static void test_create_join_common(const char *tag, create_fn create, join_fn j
 	uint64_t update_ms = now_ms + MSEC_PER_SEC * UPDATE_INTERVAL_S;
 
 	printk("BOARD: %s\n", CONFIG_BOARD);
-	printk("CONFIG_SMP: %s\n", IS_ENABLED(CONFIG_SMP) ? "y" : "n");
+	printk("CONFIG_ZBLUE_SMP: %s\n", IS_ENABLED(CONFIG_ZBLUE_SMP) ? "y" : "n");
 	printk("NUM_THREADS: %u\n", NUM_THREADS);
 	printk("TEST_NUM_CPUS: %u\n", CONFIG_TEST_NUM_CPUS);
 	printk("TEST_DURATION_S: %u\n", CONFIG_TEST_DURATION_S);
@@ -74,7 +74,7 @@ static void test_create_join_common(const char *tag, create_fn create, join_fn j
 	}
 
 	do {
-		if (!IS_ENABLED(CONFIG_SMP)) {
+		if (!IS_ENABLED(CONFIG_ZBLUE_SMP)) {
 			/* allow the test thread to be swapped-out */
 			k_yield();
 		}

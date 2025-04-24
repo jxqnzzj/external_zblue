@@ -52,7 +52,7 @@ void z_smp_release_global_lock(struct k_thread *thread);
  */
 static inline void z_sched_switch_spin(struct k_thread *thread)
 {
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	volatile void **shp = (void *)&thread->switch_handle;
 
 	while (*shp == NULL) {
@@ -63,7 +63,7 @@ static inline void z_sched_switch_spin(struct k_thread *thread)
 	 * non-null.
 	 */
 	barrier_dmem_fence_full();
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 }
 
 /* New style context switching.  arch_switch() is a lower level
@@ -124,14 +124,14 @@ static ALWAYS_INLINE unsigned int do_swap(unsigned int key,
 	if (new_thread != old_thread) {
 		z_sched_usage_switch(new_thread);
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 		_current_cpu->swap_ok = 0;
 		new_thread->base.cpu = arch_curr_cpu()->id;
 
 		if (!is_spinlock) {
 			z_smp_release_global_lock(new_thread);
 		}
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 		z_thread_mark_switched_out();
 		z_sched_switch_spin(new_thread);
 		_current_cpu->current = new_thread;
@@ -146,16 +146,16 @@ static ALWAYS_INLINE unsigned int do_swap(unsigned int key,
 
 		arch_cohere_stacks(old_thread, NULL, new_thread);
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 		/* Now add _current back to the run queue, once we are
 		 * guaranteed to reach the context switch in finite
 		 * time.  See z_sched_switch_spin().
 		 */
 		z_requeue_current(old_thread);
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 		void *newsh = new_thread->switch_handle;
 
-		if (IS_ENABLED(CONFIG_SMP)) {
+		if (IS_ENABLED(CONFIG_ZBLUE_SMP)) {
 			/* Active threads must have a null here.  And
 			 * it must be seen before the scheduler lock
 			 * is released!

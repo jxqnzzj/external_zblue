@@ -152,7 +152,7 @@ void arch_secondary_cpu_init(int cpu_num)
 	z_arm64_safe_exception_stack_init();
 #endif
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	arm_gic_secondary_init();
 
 	irq_enable(SGI_SCHED_IPI);
@@ -184,7 +184,7 @@ void arch_secondary_cpu_init(int cpu_num)
 	fn(arg);
 }
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 
 static void send_ipi(unsigned int ipi, uint32_t cpu_bitmap)
 {

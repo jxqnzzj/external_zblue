@@ -17,7 +17,7 @@
  * afterwards.
  */
 
-#if defined(CONFIG_SMP) && CONFIG_MP_MAX_NUM_CPUS > 1
+#if defined(CONFIG_ZBLUE_SMP) && CONFIG_MP_MAX_NUM_CPUS > 1
 #error Meta-IRQ test requires single-CPU operation
 #endif
 

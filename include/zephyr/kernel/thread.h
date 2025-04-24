@@ -107,7 +107,7 @@ struct _thread_base {
 
 	uint32_t order_key;
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	/* True for the per-CPU idle threads */
 	uint8_t is_idle;
 
@@ -117,7 +117,7 @@ struct _thread_base {
 	/* Recursive count of irq_lock() calls */
 	uint8_t global_lock_count;
 
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 
 #ifdef CONFIG_SCHED_CPU_MASK
 	/* "May run on" bits for each CPU */
@@ -367,10 +367,10 @@ struct k_thread {
 	struct k_obj_core  obj_core;
 #endif /* CONFIG_OBJ_CORE_THREAD */
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	/** threads waiting in k_thread_suspend() */
 	_wait_q_t  halt_queue;
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 
 	/** arch-specifics: must always be at the end */
 	struct _thread_arch arch;

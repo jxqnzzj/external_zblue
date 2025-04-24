@@ -189,7 +189,7 @@ void arch_secondary_cpu_init(void)
 	z_arm_mmu_init();
 #endif
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	arm_gic_secondary_init();
 
 	irq_enable(SGI_SCHED_IPI);
@@ -220,7 +220,7 @@ void arch_secondary_cpu_init(void)
 	fn(arg);
 }
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 
 static void send_ipi(unsigned int ipi, uint32_t cpu_bitmap)
 {

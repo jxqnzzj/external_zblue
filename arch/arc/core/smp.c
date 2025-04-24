@@ -62,7 +62,7 @@ void arch_cpu_start(int cpu_num, k_thread_stack_t *stack, int sz,
 	}
 }
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 static void arc_connect_debug_mask_update(int cpu_num)
 {
 	uint32_t core_mask = 1 << cpu_num;
@@ -95,7 +95,7 @@ void arch_secondary_cpu_init(int cpu_num)
 {
 	arch_cpustart_t fn;
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	struct arc_connect_bcr bcr;
 
 	bcr.val = z_arc_v2_aux_reg_read(_ARC_V2_CONNECT_BCR);
@@ -127,7 +127,7 @@ void arch_secondary_cpu_init(int cpu_num)
 	fn(arc_cpu_init[cpu_num].arg);
 }
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 
 static void sched_ipi_handler(const void *unused)
 {

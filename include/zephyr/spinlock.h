@@ -46,7 +46,7 @@ struct k_spinlock {
 /**
  * @cond INTERNAL_HIDDEN
  */
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 #ifdef CONFIG_TICKET_SPINLOCKS
 	/*
 	 * Ticket spinlocks are conceptually two atomic variables,
@@ -64,7 +64,7 @@ struct k_spinlock {
 #else
 	atomic_t locked;
 #endif /* CONFIG_TICKET_SPINLOCKS */
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 
 #ifdef CONFIG_SPIN_VALIDATE
 	/* Stores the thread that holds the lock with the locking CPU
@@ -78,9 +78,9 @@ struct k_spinlock {
 #endif /* CONFIG_SPIN_LOCK_TIME_LIMIT */
 #endif /* CONFIG_SPIN_VALIDATE */
 
-#if defined(CONFIG_CPP) && !defined(CONFIG_SMP) && \
+#if defined(CONFIG_CPP) && !defined(CONFIG_ZBLUE_SMP) && \
 	!defined(CONFIG_SPIN_VALIDATE)
-	/* If CONFIG_SMP and CONFIG_SPIN_VALIDATE are both not defined
+	/* If CONFIG_ZBLUE_SMP and CONFIG_SPIN_VALIDATE are both not defined
 	 * the k_spinlock struct will have no members. The result
 	 * is that in C sizeof(k_spinlock) is 0 and in C++ it is 1.
 	 *
@@ -191,7 +191,7 @@ static ALWAYS_INLINE k_spinlock_key_t k_spin_lock(struct k_spinlock *l)
 	k.key = arch_irq_lock();
 
 	z_spinlock_validate_pre(l);
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 #ifdef CONFIG_TICKET_SPINLOCKS
 	/*
 	 * Enqueue ourselves to the end of a spinlock waiters queue
@@ -207,7 +207,7 @@ static ALWAYS_INLINE k_spinlock_key_t k_spin_lock(struct k_spinlock *l)
 		arch_spin_relax();
 	}
 #endif /* CONFIG_TICKET_SPINLOCKS */
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 	z_spinlock_validate_post(l);
 
 	return k;
@@ -232,7 +232,7 @@ static ALWAYS_INLINE int k_spin_trylock(struct k_spinlock *l, k_spinlock_key_t *
 	int key = arch_irq_lock();
 
 	z_spinlock_validate_pre(l);
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 #ifdef CONFIG_TICKET_SPINLOCKS
 	/*
 	 * atomic_get and atomic_cas operations below are not executed
@@ -262,18 +262,18 @@ static ALWAYS_INLINE int k_spin_trylock(struct k_spinlock *l, k_spinlock_key_t *
 		goto busy;
 	}
 #endif /* CONFIG_TICKET_SPINLOCKS */
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 	z_spinlock_validate_post(l);
 
 	k->key = key;
 
 	return 0;
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 busy:
 	arch_irq_unlock(key);
 	return -EBUSY;
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 }
 
 /**
@@ -313,7 +313,7 @@ static ALWAYS_INLINE void k_spin_unlock(struct k_spinlock *l,
 #endif /* CONFIG_SPIN_LOCK_TIME_LIMIT */
 #endif /* CONFIG_SPIN_VALIDATE */
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 #ifdef CONFIG_TICKET_SPINLOCKS
 	/* Give the spinlock to the next CPU in a FIFO */
 	(void)atomic_inc(&l->owner);
@@ -327,7 +327,7 @@ static ALWAYS_INLINE void k_spin_unlock(struct k_spinlock *l,
 	 */
 	(void)atomic_clear(&l->locked);
 #endif /* CONFIG_TICKET_SPINLOCKS */
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 	arch_irq_unlock(key.key);
 }
 
@@ -335,7 +335,7 @@ static ALWAYS_INLINE void k_spin_unlock(struct k_spinlock *l,
  * @cond INTERNAL_HIDDEN
  */
 
-#if defined(CONFIG_SMP) && defined(CONFIG_TEST)
+#if defined(CONFIG_ZBLUE_SMP) && defined(CONFIG_TEST)
 /*
  * @brief Checks if spinlock is held by some CPU, including the local CPU.
  *		This API shouldn't be used outside the tests for spinlock
@@ -353,7 +353,7 @@ static ALWAYS_INLINE bool z_spin_is_locked(struct k_spinlock *l)
 	return l->locked;
 #endif /* CONFIG_TICKET_SPINLOCKS */
 }
-#endif /* defined(CONFIG_SMP) && defined(CONFIG_TEST) */
+#endif /* defined(CONFIG_ZBLUE_SMP) && defined(CONFIG_TEST) */
 
 /* Internal function: releases the lock, but leaves local interrupts disabled */
 static ALWAYS_INLINE void k_spin_release(struct k_spinlock *l)
@@ -362,13 +362,13 @@ static ALWAYS_INLINE void k_spin_release(struct k_spinlock *l)
 #ifdef CONFIG_SPIN_VALIDATE
 	__ASSERT(z_spin_unlock_valid(l), "Not my spinlock %p", l);
 #endif
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 #ifdef CONFIG_TICKET_SPINLOCKS
 	(void)atomic_inc(&l->owner);
 #else
 	(void)atomic_clear(&l->locked);
 #endif /* CONFIG_TICKET_SPINLOCKS */
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 }
 
 #if defined(CONFIG_SPIN_VALIDATE) && defined(__GNUC__)

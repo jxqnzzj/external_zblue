@@ -127,7 +127,7 @@ void k_thread_foreach(k_thread_user_cb_t user_cb, void *user_data);
  *
  * This function is does otherwise the same thing as k_thread_foreach(),
  * but it only loops through the threads running on specified cpu only.
- * If CONFIG_SMP is not defined the implementation this is the same as
+ * If CONFIG_ZBLUE_SMP is not defined the implementation this is the same as
  * k_thread_foreach(), with an assert cpu == 0.
  *
  * @param cpu The filtered cpu number
@@ -140,7 +140,7 @@ void k_thread_foreach(k_thread_user_cb_t user_cb, void *user_data);
  * list which means creation of new threads and terminations of existing
  * threads are blocked until this API returns.
  */
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 void k_thread_foreach_filter_by_cpu(unsigned int cpu,
 				    k_thread_user_cb_t user_cb, void *user_data);
 #else
@@ -189,7 +189,7 @@ void k_thread_foreach_unlocked(
  *
  * This function does otherwise the same thing as
  * k_thread_foreach_unlocked(), but it only loops through the threads
- * running on specified cpu. If CONFIG_SMP is not defined the
+ * running on specified cpu. If CONFIG_ZBLUE_SMP is not defined the
  * implementation this is the same as k_thread_foreach_unlocked(), with an
  * assert requiring cpu == 0.
  *
@@ -215,7 +215,7 @@ void k_thread_foreach_unlocked(
  * Do not reuse the memory that was occupied by k_thread structure of aborted
  * task if it was aborted after this function was called in any context.
  */
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 void k_thread_foreach_unlocked_filter_by_cpu(unsigned int cpu,
 					     k_thread_user_cb_t user_cb, void *user_data);
 #else
@@ -1217,7 +1217,7 @@ static inline bool k_is_pre_kernel(void)
  * cooperative priority, allowing cheap synchronization vs. other
  * preemptible or cooperative threads running on the current CPU.  It
  * does not prevent preemption or asynchrony of other types.  It does
- * not prevent threads from running on other CPUs when CONFIG_SMP=y.
+ * not prevent threads from running on other CPUs when CONFIG_ZBLUE_SMP=y.
  * It does not prevent interrupts from happening, nor does it prevent
  * threads with MetaIRQ priorities from preempting the current thread.
  * In general this is a historical API not well-suited to modern

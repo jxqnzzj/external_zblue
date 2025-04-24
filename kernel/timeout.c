@@ -217,7 +217,7 @@ void sys_clock_announce(int32_t ticks)
 	 * timeouts and confuse apps), just increment the tick count
 	 * and return.
 	 */
-	if (IS_ENABLED(CONFIG_SMP) && (announce_remaining != 0)) {
+	if (IS_ENABLED(CONFIG_ZBLUE_SMP) && (announce_remaining != 0)) {
 		announce_remaining += ticks;
 		k_spin_unlock(&timeout_lock, key);
 		return;

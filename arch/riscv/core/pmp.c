@@ -401,7 +401,7 @@ void z_riscv_pmp_init(void)
 	write_pmp_entries(0, index, true, pmp_addr, pmp_cfg, ARRAY_SIZE(pmp_addr));
 #endif
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 #ifdef CONFIG_PMP_STACK_GUARD
 	/*
 	 * The IRQ stack guard area is different for each CPU.

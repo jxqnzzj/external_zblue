@@ -140,7 +140,7 @@ static inline void trigger_irq(int vector)
 	x86_write_x2apic(LOAPIC_SELF_IPI, ((VECTOR_MASK & vector)));
 #else
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	int cpu_id = arch_curr_cpu()->id;
 #else
 	int cpu_id = 0;

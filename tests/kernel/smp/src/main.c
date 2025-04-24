@@ -617,7 +617,7 @@ static void thread_get_cpu_entry(void *p1, void *p2, void *p3)
  *   dynamic analysis and testing,
  *
  * Prerequisite Conditions:
- * - CONFIG_SMP=y, and the HW platform must support SMP.
+ * - CONFIG_ZBLUE_SMP=y, and the HW platform must support SMP.
  *
  * Input Specifications:
  * - N/A
@@ -703,7 +703,7 @@ void z_trace_sched_ipi(void)
  *   dynamic analysis and testing
  *
  * Prerequisite Conditions:
- * - CONFIG_SMP=y, and the HW platform must support SMP.
+ * - CONFIG_ZBLUE_SMP=y, and the HW platform must support SMP.
  * - CONFIG_TRACE_SCHED_IPI=y was set.
  *
  * Input Specifications:
@@ -788,7 +788,7 @@ void entry_oops(void *p1, void *p2, void *p3)
 /**
  * @brief Test fatal error can be triggered on different core
 
- * @details When CONFIG_SMP is enabled, on some multiprocessor
+ * @details When CONFIG_ZBLUE_SMP is enabled, on some multiprocessor
  * platforms, exception can be triggered on different core at
  * the same time.
  *
@@ -824,7 +824,7 @@ static void workq_handler(struct k_work *work)
 /**
  * @brief Test system workq run on different core
 
- * @details When macro CONFIG_SMP is enabled, workq can be run
+ * @details When macro CONFIG_ZBLUE_SMP is enabled, workq can be run
  * on different core.
  *
  * @ingroup kernel_common_tests

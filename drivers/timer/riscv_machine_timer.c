@@ -251,7 +251,7 @@ static int sys_clock_driver_init(void)
 	return 0;
 }
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 void smp_timer_init(void)
 {
 	set_mtimecmp(last_count + CYC_PER_TICK);

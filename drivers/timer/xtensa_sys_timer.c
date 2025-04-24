@@ -112,7 +112,7 @@ uint32_t sys_clock_cycle_get_32(void)
 	return ccount();
 }
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 void smp_timer_init(void)
 {
 	set_ccompare(ccount() + CYC_PER_TICK);

@@ -403,7 +403,7 @@ static inline bool is_flipped_pte(pentry_t pte)
 }
 #endif
 
-#if defined(CONFIG_SMP)
+#if defined(CONFIG_ZBLUE_SMP)
 __pinned_func
 void z_x86_tlb_ipi(const void *arg)
 {
@@ -442,7 +442,7 @@ static inline void tlb_shootdown(void)
 {
 	z_loapic_ipi(0, LOAPIC_ICR_IPI_OTHERS, CONFIG_TLB_IPI_VECTOR);
 }
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 
 __pinned_func
 static inline void assert_addr_aligned(uintptr_t addr)
@@ -863,7 +863,7 @@ static inline bool atomic_pte_cas(pentry_t *target, pentry_t old_value,
  * Don't do this, just lock local interrupts. Needless to say, this
  * isn't workable if someone ever adds SMP to the 32-bit x86 port.
  */
-BUILD_ASSERT(!IS_ENABLED(CONFIG_SMP));
+BUILD_ASSERT(!IS_ENABLED(CONFIG_ZBLUE_SMP));
 
 __pinned_func
 static inline pentry_t atomic_pte_get(const pentry_t *target)
@@ -1221,11 +1221,11 @@ static int range_map(void *virt, uintptr_t phys, size_t size,
 	}
 
 out:
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	if ((options & OPTION_FLUSH) != 0U) {
 		tlb_shootdown();
 	}
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 
 	return ret;
 }
@@ -1761,7 +1761,7 @@ static int region_map_update(pentry_t *ptables, void *start,
 				options);
 	k_spin_unlock(&x86_mmu_lock, key);
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	tlb_shootdown();
 #endif
 

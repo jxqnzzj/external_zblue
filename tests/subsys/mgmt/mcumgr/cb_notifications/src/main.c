@@ -85,7 +85,7 @@ static void destroy_callbacks(void *p)
 
 static inline void wait_for_sync(void)
 {
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	/* For SMP systems, it is possible that a dummy response is fully received and processed
 	 * prior to the callback code being executed, therefore implement a dummy wait to wait
 	 * for callback synchronisation to take place.

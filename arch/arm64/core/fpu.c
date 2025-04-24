@@ -91,7 +91,7 @@ void arch_flush_local_fpu(void)
 	}
 }
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 static void flush_owned_fpu(struct k_thread *thread)
 {
 	__ASSERT(read_daif() & DAIF_IRQ_BIT, "must be called with IRQs disabled");
@@ -255,7 +255,7 @@ void z_arm64_fpu_trap(struct arch_esf *esf)
 		return;
 	}
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	/*
 	 * Make sure the FPU context we need isn't live on another CPU.
 	 * The current CPU's FPU context is NULL at this point.
@@ -330,7 +330,7 @@ int arch_float_disable(struct k_thread *thread)
 	if (thread != NULL) {
 		unsigned int key = arch_irq_lock();
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 		flush_owned_fpu(thread);
 #else
 		if (thread == atomic_ptr_get(&_current_cpu->arch.fpu_owner)) {

@@ -114,7 +114,7 @@ static int cleanup_test(struct ztest_unit_test *test)
 
 #ifdef KERNEL
 
-#if defined(CONFIG_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)
+#if defined(CONFIG_ZBLUE_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)
 #define MAX_NUM_CPUHOLD  (CONFIG_MP_MAX_NUM_CPUS - 1)
 #define CPUHOLD_STACK_SZ (512 + CONFIG_TEST_EXTRA_STACK_SIZE)
 
@@ -251,11 +251,11 @@ static void cpu_hold(void *arg1, void *arg2, void *arg3)
 	zassert_true(dt < CONFIG_ZTEST_CPU_HOLD_TIME_MS, "1cpu test took too long (%d ms)", dt);
 	arch_irq_unlock(key);
 }
-#endif /* CONFIG_SMP && (CONFIG_MP_MAX_NUM_CPUS > 1) */
+#endif /* CONFIG_ZBLUE_SMP && (CONFIG_MP_MAX_NUM_CPUS > 1) */
 
 void z_impl_z_test_1cpu_start(void)
 {
-#if defined(CONFIG_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)
+#if defined(CONFIG_ZBLUE_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)
 	unsigned int num_cpus = arch_num_cpus();
 	int j;
 
@@ -282,7 +282,7 @@ void z_impl_z_test_1cpu_start(void)
 
 void z_impl_z_test_1cpu_stop(void)
 {
-#if defined(CONFIG_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)
+#if defined(CONFIG_ZBLUE_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)
 	cpuhold_active = 0;
 
 	for (int i = 0; i <= MAX_NUM_CPUHOLD; i++) {

@@ -340,7 +340,7 @@ unsigned int arm_gic_get_active(void);
  */
 void arm_gic_eoi(unsigned int irq);
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 /**
  * @brief Initialize GIC of secondary cores
  */

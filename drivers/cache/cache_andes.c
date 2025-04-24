@@ -202,7 +202,7 @@ static ALWAYS_INLINE int nds_l1d_cache_range(void *addr, size_t size, int op)
 
 void cache_data_enable(void)
 {
-	if (IS_ENABLED(CONFIG_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)) {
+	if (IS_ENABLED(CONFIG_ZBLUE_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)) {
 		return;
 	}
 
@@ -229,7 +229,7 @@ void cache_data_disable(void)
 {
 	unsigned long status = csr_read(mstatus);
 
-	if (IS_ENABLED(CONFIG_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)) {
+	if (IS_ENABLED(CONFIG_ZBLUE_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)) {
 		return;
 	}
 
@@ -265,7 +265,7 @@ void cache_data_disable(void)
 
 void cache_instr_enable(void)
 {
-	if (IS_ENABLED(CONFIG_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)) {
+	if (IS_ENABLED(CONFIG_ZBLUE_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)) {
 		return;
 	}
 
@@ -274,7 +274,7 @@ void cache_instr_enable(void)
 
 void cache_instr_disable(void)
 {
-	if (IS_ENABLED(CONFIG_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)) {
+	if (IS_ENABLED(CONFIG_ZBLUE_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)) {
 		return;
 	}
 
@@ -320,7 +320,7 @@ int cache_instr_invd_all(void)
 {
 	unsigned long ret = 0;
 
-	if (IS_ENABLED(CONFIG_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)) {
+	if (IS_ENABLED(CONFIG_ZBLUE_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)) {
 		return -ENOTSUP;
 	}
 
@@ -353,7 +353,7 @@ int cache_instr_invd_range(void *addr, size_t size)
 {
 	unsigned long ret = 0;
 
-	if (IS_ENABLED(CONFIG_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)) {
+	if (IS_ENABLED(CONFIG_ZBLUE_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)) {
 		ARG_UNUSED(addr);
 		ARG_UNUSED(size);
 

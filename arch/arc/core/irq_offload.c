@@ -25,7 +25,7 @@
 
 #define IRQ_OFFLOAD_PRIO	0
 
-#define CURR_CPU (IS_ENABLED(CONFIG_SMP) ? arch_curr_cpu()->id : 0)
+#define CURR_CPU (IS_ENABLED(CONFIG_ZBLUE_SMP) ? arch_curr_cpu()->id : 0)
 
 static struct {
 	volatile irq_offload_routine_t fn;

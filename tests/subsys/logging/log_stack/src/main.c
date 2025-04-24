@@ -142,7 +142,7 @@ ZTEST_SUITE(test_log_stack, NULL, NULL, NULL, NULL, after);
 #define MORE_ARGS_USAGE 1744
 #endif
 
-#elif defined(CONFIG_RISCV) && !defined(CONFIG_64BIT) && !defined(CONFIG_SMP)
+#elif defined(CONFIG_RISCV) && !defined(CONFIG_64BIT) && !defined(CONFIG_ZBLUE_SMP)
 
 #if !defined(CONFIG_LOG_MODE_IMMEDIATE) && !defined(CONFIG_NO_OPTIMIZATIONS)
 #define SIMPLE_USAGE 136
@@ -162,7 +162,7 @@ ZTEST_SUITE(test_log_stack, NULL, NULL, NULL, NULL, after);
 #define MORE_ARGS_USAGE 1008
 #endif
 
-#elif defined(CONFIG_RISCV) && !defined(CONFIG_64BIT) && defined(CONFIG_SMP)
+#elif defined(CONFIG_RISCV) && !defined(CONFIG_64BIT) && defined(CONFIG_ZBLUE_SMP)
 
 #if !defined(CONFIG_LOG_MODE_IMMEDIATE) && !defined(CONFIG_NO_OPTIMIZATIONS)
 #define SIMPLE_USAGE 96
@@ -182,7 +182,7 @@ ZTEST_SUITE(test_log_stack, NULL, NULL, NULL, NULL, after);
 #define MORE_ARGS_USAGE 1024
 #endif
 
-#elif defined(CONFIG_RISCV) && defined(CONFIG_64BIT) && defined(CONFIG_SMP)
+#elif defined(CONFIG_RISCV) && defined(CONFIG_64BIT) && defined(CONFIG_ZBLUE_SMP)
 
 #if !defined(CONFIG_LOG_MODE_IMMEDIATE) && !defined(CONFIG_NO_OPTIMIZATIONS)
 #define SIMPLE_USAGE 200

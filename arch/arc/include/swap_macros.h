@@ -311,7 +311,7 @@ fpu_skip_load :
  * two temp regs are needed
  */
 .macro _check_and_inc_int_nest_counter, reg1, reg2
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	/* get pointer to _cpu_t of this CPU */
 	_get_cpu_id MACRO_ARG(reg1)
 	ASLR MACRO_ARG(reg1), MACRO_ARG(reg1), ARC_REGSHIFT
@@ -324,7 +324,7 @@ fpu_skip_load :
 	ld MACRO_ARG(reg2), [MACRO_ARG(reg1), _kernel_offset_to_nested]
 #endif
 	add MACRO_ARG(reg2), MACRO_ARG(reg2), 1
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	st MACRO_ARG(reg2), [MACRO_ARG(reg1), ___cpu_t_nested_OFFSET]
 #else
 	st MACRO_ARG(reg2), [MACRO_ARG(reg1), _kernel_offset_to_nested]
@@ -337,7 +337,7 @@ fpu_skip_load :
  * not used
  */
 .macro _dec_int_nest_counter, reg1, reg2
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	/* get pointer to _cpu_t of this CPU */
 	_get_cpu_id MACRO_ARG(reg1)
 	ASLR MACRO_ARG(reg1), MACRO_ARG(reg1), ARC_REGSHIFT
@@ -350,7 +350,7 @@ fpu_skip_load :
 	ld MACRO_ARG(reg2), [MACRO_ARG(reg1), _kernel_offset_to_nested]
 #endif
 	sub MACRO_ARG(reg2), MACRO_ARG(reg2), 1
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	st MACRO_ARG(reg2), [MACRO_ARG(reg1), ___cpu_t_nested_OFFSET]
 #else
 	st MACRO_ARG(reg2), [MACRO_ARG(reg1), _kernel_offset_to_nested]
@@ -386,7 +386,7 @@ fpu_skip_load :
  * the result will be in irq_sp (a reg)
  */
 .macro _get_curr_cpu_irq_stack, irq_sp
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	/* get pointer to _cpu_t of this CPU */
 	_get_cpu_id MACRO_ARG(irq_sp)
 	ASLR MACRO_ARG(irq_sp), MACRO_ARG(irq_sp), ARC_REGSHIFT

@@ -8,7 +8,7 @@
 #include <zephyr/ztest.h>
 #include <zephyr/kernel.h>
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 #error Cannot test MP API if SMP is using the CPUs
 #endif
 

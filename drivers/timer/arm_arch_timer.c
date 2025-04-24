@@ -213,7 +213,7 @@ void arch_busy_wait(uint32_t usec_to_wait)
 }
 #endif
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 void smp_timer_init(void)
 {
 	/*

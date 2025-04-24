@@ -19,7 +19,7 @@
 #define LENGTH		((DIGITS_NUM / 4) * 14)
 #define STACK_SIZE	((LENGTH * sizeof(int) + 1280))
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 #define CORES_NUM	arch_num_cpus()
 #else
 #define CORES_NUM	1

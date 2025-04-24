@@ -767,7 +767,7 @@ static int configure_domain_partitions(struct k_mem_domain *domain)
 			return ret;
 		}
 	}
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	/* the thread could be running on another CPU right now */
 	z_arm64_mem_cfg_ipi();
 #endif
@@ -794,7 +794,7 @@ int arch_mem_domain_thread_add(struct k_thread *thread)
 	int ret = 0;
 
 	ret = configure_dynamic_mpu_regions(thread);
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	if (ret == 0 && thread != _current) {
 		/* the thread could be running on another CPU right now */
 		z_arm64_mem_cfg_ipi();
@@ -809,7 +809,7 @@ int arch_mem_domain_thread_remove(struct k_thread *thread)
 	int ret = 0;
 
 	ret = configure_dynamic_mpu_regions(thread);
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	if (ret == 0 && thread != _current) {
 		/* the thread could be running on another CPU right now */
 		z_arm64_mem_cfg_ipi();

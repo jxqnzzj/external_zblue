@@ -13,7 +13,7 @@
 /* kernel */
 
 /* main */
-#ifndef CONFIG_SMP
+#ifndef CONFIG_ZBLUE_SMP
 /* Relies on _kernel.cpu being the first member of _kernel and having 1 element
  */
 #define _kernel_offset_to_nested \
@@ -29,7 +29,7 @@
 #define _kernel_offset_to_fp_ctx \
 	(___cpu_t_fp_ctx_OFFSET)
 #endif /* CONFIG_FPU_SHARING */
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 
 #define _kernel_offset_to_idle \
 	(___kernel_t_idle_OFFSET)

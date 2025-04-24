@@ -16,7 +16,7 @@
  * world application would likely use the static approach for both threads.
  */
 
-#define PIN_THREADS (IS_ENABLED(CONFIG_SMP) && IS_ENABLED(CONFIG_SCHED_CPU_MASK))
+#define PIN_THREADS (IS_ENABLED(CONFIG_ZBLUE_SMP) && IS_ENABLED(CONFIG_SCHED_CPU_MASK))
 
 /* size of stack area used by each thread */
 #define STACKSIZE 1024
@@ -46,7 +46,7 @@ void hello_loop(const char *my_name,
 
 		current_thread = k_current_get();
 		tname = k_thread_name_get(current_thread);
-#if CONFIG_SMP
+#if CONFIG_ZBLUE_SMP
 		cpu = arch_curr_cpu()->id;
 #else
 		cpu = 0;

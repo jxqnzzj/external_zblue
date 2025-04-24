@@ -270,14 +270,14 @@ static int sys_clock_driver_init(void)
 	__get_cpuid(0x80000007, &eax, &ebx, &ecx, &edx);
 	__ASSERT((edx & BIT(8)) != 0, "No Invariant TSC support");
 
-	if (IS_ENABLED(CONFIG_SMP)) {
+	if (IS_ENABLED(CONFIG_ZBLUE_SMP)) {
 		ebx = 0; /* prevent compiler warning */
 		__get_cpuid_count(CPUID_EXTENDED_FEATURES_LVL, 0, &eax, &ebx, &ecx, &edx);
 		__ASSERT((ebx & BIT(1)) != 0, "No TSC_ADJUST MSR support");
 	}
 #endif
 
-	if (IS_ENABLED(CONFIG_SMP)) {
+	if (IS_ENABLED(CONFIG_ZBLUE_SMP)) {
 		clear_tsc_adjust();
 	}
 

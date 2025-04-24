@@ -255,7 +255,7 @@ static ALWAYS_INLINE int nds_l2_cache_init(void)
 	__asm__ volatile ("fence.i");
 	sys_write32(l2c_ctrl, L2C_CTRL);
 
-	if (IS_ENABLED(CONFIG_SMP)) {
+	if (IS_ENABLED(CONFIG_ZBLUE_SMP)) {
 		if (l2_cache_cfg.size) {
 			l2c_ctrl = sys_read32(L2C_CTRL);
 

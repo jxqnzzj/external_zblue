@@ -140,7 +140,7 @@ static ALWAYS_INLINE struct k_thread *runq_best(void)
  */
 static inline bool should_queue_thread(struct k_thread *thread)
 {
-	return !IS_ENABLED(CONFIG_SMP) || (thread != _current);
+	return !IS_ENABLED(CONFIG_ZBLUE_SMP) || (thread != _current);
 }
 
 static ALWAYS_INLINE void queue_thread(struct k_thread *thread)
@@ -149,12 +149,12 @@ static ALWAYS_INLINE void queue_thread(struct k_thread *thread)
 	if (should_queue_thread(thread)) {
 		runq_add(thread);
 	}
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	if (thread == _current) {
 		/* add current to end of queue means "yield" */
 		_current_cpu->swap_ok = true;
 	}
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 }
 
 static ALWAYS_INLINE void dequeue_thread(struct k_thread *thread)
@@ -165,7 +165,7 @@ static ALWAYS_INLINE void dequeue_thread(struct k_thread *thread)
 	}
 }
 
-/* Called out of z_swap() when CONFIG_SMP.  The current thread can
+/* Called out of z_swap() when CONFIG_ZBLUE_SMP.  The current thread can
  * never live in the run queue until we are inexorably on the context
  * switch path on SMP, otherwise there is a deadlock condition where a
  * set of CPUs pick a cycle of threads to run and wait for them all to
@@ -201,12 +201,12 @@ static inline void clear_halting(struct k_thread *thread)
 
 static ALWAYS_INLINE struct k_thread *next_up(void)
 {
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	if (is_halting(_current)) {
 		halt_thread(_current, is_aborting(_current) ?
 				      _THREAD_DEAD : _THREAD_SUSPENDED);
 	}
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 
 	struct k_thread *thread = runq_best();
 
@@ -231,7 +231,7 @@ static ALWAYS_INLINE struct k_thread *next_up(void)
  * CONFIG_NUM_COOP_PRIORITIES > CONFIG_NUM_METAIRQ_PRIORITIES
  */
 
-#ifndef CONFIG_SMP
+#ifndef CONFIG_ZBLUE_SMP
 	/* In uniprocessor mode, we can leave the current thread in
 	 * the queue (actually we have to, otherwise the assembly
 	 * context switch code for all architectures would be
@@ -284,7 +284,7 @@ static ALWAYS_INLINE struct k_thread *next_up(void)
 
 	_current_cpu->swap_ok = false;
 	return thread;
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 }
 
 void move_thread_to_end_of_prio_q(struct k_thread *thread)
@@ -322,7 +322,7 @@ static void update_metairq_preempt(struct k_thread *thread)
 
 static ALWAYS_INLINE void update_cache(int preempt_ok)
 {
-#ifndef CONFIG_SMP
+#ifndef CONFIG_ZBLUE_SMP
 	struct k_thread *thread = next_up();
 
 	if (should_preempt(thread, preempt_ok)) {
@@ -345,7 +345,7 @@ static ALWAYS_INLINE void update_cache(int preempt_ok)
 	 * reason the scheduler will make the same decision anyway.
 	 */
 	_current_cpu->swap_ok = preempt_ok;
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 }
 
 static struct _cpu *thread_active_elsewhere(struct k_thread *thread)
@@ -354,7 +354,7 @@ static struct _cpu *thread_active_elsewhere(struct k_thread *thread)
 	 * another CPU. There are more scalable designs to answer this
 	 * question in constant time, but this is fine for now.
 	 */
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	int currcpu = _current_cpu->id;
 
 	unsigned int num_cpus = arch_num_cpus();
@@ -365,7 +365,7 @@ static struct _cpu *thread_active_elsewhere(struct k_thread *thread)
 			return &_kernel.cpus[i];
 		}
 	}
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 	ARG_UNUSED(thread);
 	return NULL;
 }
@@ -450,7 +450,7 @@ static void z_thread_halt(struct k_thread *thread, k_spinlock_key_t key,
 			  bool terminate)
 {
 	_wait_q_t *wq = &thread->join_queue;
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	wq = terminate ? wq : &thread->halt_queue;
 #endif
 
@@ -466,7 +466,7 @@ static void z_thread_halt(struct k_thread *thread, k_spinlock_key_t key,
 	if (cpu != NULL) {
 		thread->base.thread_state |= (terminate ? _THREAD_ABORTING
 					      : _THREAD_SUSPENDING);
-#if defined(CONFIG_SMP) && defined(CONFIG_SCHED_IPI_SUPPORTED)
+#if defined(CONFIG_ZBLUE_SMP) && defined(CONFIG_SCHED_IPI_SUPPORTED)
 #ifdef CONFIG_ARCH_HAS_DIRECTED_IPIS
 		arch_sched_directed_ipi(IPI_CPU_MASK(cpu->id));
 #else
@@ -708,7 +708,7 @@ bool z_thread_prio_set(struct k_thread *thread, int prio)
 		need_sched = z_is_thread_ready(thread);
 
 		if (need_sched) {
-			if (!IS_ENABLED(CONFIG_SMP) || z_is_thread_queued(thread)) {
+			if (!IS_ENABLED(CONFIG_ZBLUE_SMP) || z_is_thread_queued(thread)) {
 				dequeue_thread(thread);
 				thread->base.prio = prio;
 				queue_thread(thread);
@@ -747,9 +747,9 @@ bool z_thread_prio_set(struct k_thread *thread, int prio)
 
 static inline bool resched(uint32_t key)
 {
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	_current_cpu->swap_ok = 0;
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 
 	return arch_irq_unlocked(key) && !arch_is_in_isr();
 }
@@ -761,7 +761,7 @@ static inline bool resched(uint32_t key)
 static inline bool need_swap(void)
 {
 	/* the SMP case will be handled in C based z_swap() */
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	return true;
 #else
 	struct k_thread *new_thread;
@@ -769,7 +769,7 @@ static inline bool need_swap(void)
 	/* Check if the next ready thread is the same as the current thread */
 	new_thread = _kernel.ready_q.cache;
 	return new_thread != _current;
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 }
 
 void z_reschedule(struct k_spinlock *lock, k_spinlock_key_t key)
@@ -821,7 +821,7 @@ void k_sched_unlock(void)
 
 struct k_thread *z_swap_next_thread(void)
 {
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	struct k_thread *ret = next_up();
 
 	if (ret == _current) {
@@ -834,7 +834,7 @@ struct k_thread *z_swap_next_thread(void)
 	return ret;
 #else
 	return _kernel.ready_q.cache;
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 }
 
 #ifdef CONFIG_USE_SWITCH
@@ -880,13 +880,13 @@ void *z_get_next_switch_handle(void *interrupted)
 {
 	z_check_stack_sentinel();
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	void *ret = NULL;
 
 	K_SPINLOCK(&_sched_spinlock) {
 		struct k_thread *old_thread = _current, *new_thread;
 
-		if (IS_ENABLED(CONFIG_SMP)) {
+		if (IS_ENABLED(CONFIG_ZBLUE_SMP)) {
 			old_thread->switch_handle = NULL;
 		}
 		new_thread = next_up();
@@ -936,7 +936,7 @@ void *z_get_next_switch_handle(void *interrupted)
 		}
 		old_thread->switch_handle = interrupted;
 		ret = new_thread->switch_handle;
-		if (IS_ENABLED(CONFIG_SMP)) {
+		if (IS_ENABLED(CONFIG_ZBLUE_SMP)) {
 			/* Active threads MUST have a null here */
 			new_thread->switch_handle = NULL;
 		}
@@ -948,7 +948,7 @@ void *z_get_next_switch_handle(void *interrupted)
 	_current->switch_handle = interrupted;
 	set_current(_kernel.ready_q.cache);
 	return _current->switch_handle;
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 }
 #endif /* CONFIG_USE_SWITCH */
 
@@ -992,7 +992,7 @@ void z_impl_k_thread_priority_set(k_tid_t thread, int prio)
 
 	bool need_sched = z_thread_prio_set((struct k_thread *)thread, prio);
 
-	if ((need_sched) && (IS_ENABLED(CONFIG_SMP) ||
+	if ((need_sched) && (IS_ENABLED(CONFIG_ZBLUE_SMP) ||
 			     (_current->base.sched_locked == 0U))) {
 		z_reschedule_unlocked();
 	}
@@ -1070,7 +1070,7 @@ void z_impl_k_yield(void)
 
 	k_spinlock_key_t key = k_spin_lock(&_sched_spinlock);
 
-	if (!IS_ENABLED(CONFIG_SMP) ||
+	if (!IS_ENABLED(CONFIG_ZBLUE_SMP) ||
 	    z_is_thread_queued(_current)) {
 		dequeue_thread(_current);
 	}
@@ -1230,19 +1230,19 @@ static inline void z_vrfy_k_wakeup(k_tid_t thread)
 
 k_tid_t z_impl_k_sched_current_thread_query(void)
 {
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	/* In SMP, _current is a field read from _current_cpu, which
 	 * can race with preemption before it is read.  We must lock
 	 * local interrupts when reading it.
 	 */
 	unsigned int k = arch_irq_lock();
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 
 	k_tid_t ret = _current_cpu->current;
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	arch_irq_unlock(k);
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 	return ret;
 }
 
@@ -1308,9 +1308,9 @@ static void halt_thread(struct k_thread *thread, uint8_t new_state)
 				dummify = true;
 			}
 		}
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 		unpend_all(&thread->halt_queue);
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 		update_cache(1);
 
 		if (new_state == _THREAD_SUSPENDED) {

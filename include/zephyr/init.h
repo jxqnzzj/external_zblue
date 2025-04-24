@@ -38,7 +38,7 @@ extern "C" {
  * - `POST_KERNEL`: Executed after Kernel is alive. From this point on, Kernel
  *   primitives can be used.
  * - `APPLICATION`: Executed just before application code (`main`).
- * - `SMP`: Only available if @kconfig{CONFIG_SMP} is enabled, specific for
+ * - `SMP`: Only available if @kconfig{CONFIG_ZBLUE_SMP} is enabled, specific for
  *   SMP.
  *
  * Initialization priority can take a value in the range of 0 to 99.
@@ -212,7 +212,7 @@ struct init_entry {
  * @param init_fn Initialization function.
  * @param level Initialization level. Allowed tokens: `EARLY`, `PRE_KERNEL_1`,
  * `PRE_KERNEL_2`, `POST_KERNEL`, `APPLICATION` and `SMP` if
- * @kconfig{CONFIG_SMP} is enabled.
+ * @kconfig{CONFIG_ZBLUE_SMP} is enabled.
  * @param prio Initialization priority within @p _level. Note that it must be a
  * decimal integer literal without leading zeroes or sign (e.g. `32`), or an
  * equivalent symbolic name (e.g. `#define MY_INIT_PRIO 32`); symbolic

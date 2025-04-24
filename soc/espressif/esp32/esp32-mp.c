@@ -29,7 +29,7 @@
 #define DPORT_APPCPU_CTRL_B    Z_REG(DPORT_BASE, 0x030)
 #define DPORT_APPCPU_CTRL_C    Z_REG(DPORT_BASE, 0x034)
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 struct cpustart_rec {
 	int cpu;
 	arch_cpustart_t fn;
@@ -74,7 +74,7 @@ void smp_log(const char *msg)
 #endif
 }
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 static void appcpu_entry2(void)
 {
 	volatile int ps, ie;
@@ -225,7 +225,7 @@ void esp_appcpu_start(void *entry_point)
 	smp_log("ESP32: APPCPU start sequence complete");
 }
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 IRAM_ATTR static void esp_crosscore_isr(void *arg)
 {
 	ARG_UNUSED(arg);
@@ -315,4 +315,4 @@ IRAM_ATTR bool arch_cpu_active(int cpu_num)
 {
 	return cpus_active[cpu_num];
 }
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */

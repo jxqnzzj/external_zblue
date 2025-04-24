@@ -233,11 +233,11 @@ static inline bool z_is_idle_thread_entry(k_thread_entry_t entry_point)
 static inline bool z_is_idle_thread_object(struct k_thread *thread)
 {
 #ifdef CONFIG_MULTITHREADING
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	return thread->base.is_idle;
 #else
 	return thread == &z_idle_threads[0];
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 #else
 	return false;
 #endif /* CONFIG_MULTITHREADING */

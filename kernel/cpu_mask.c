@@ -10,10 +10,10 @@
 extern struct k_spinlock _sched_spinlock;
 
 
-# ifdef CONFIG_SMP
+# ifdef CONFIG_ZBLUE_SMP
 /* Right now we use a two byte for this mask */
 BUILD_ASSERT(CONFIG_MP_MAX_NUM_CPUS <= 16, "Too many CPUs for mask word");
-# endif /* CONFIG_SMP */
+# endif /* CONFIG_ZBLUE_SMP */
 
 
 static int cpu_mask_mod(k_tid_t thread, uint32_t enable_mask, uint32_t disable_mask)

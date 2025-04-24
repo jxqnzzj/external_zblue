@@ -150,7 +150,7 @@ void idc_isr(const void *param)
 {
 	ARG_UNUSED(param);
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	/* Right now this interrupt is only used for IPIs */
 	z_sched_ipi();
 #endif

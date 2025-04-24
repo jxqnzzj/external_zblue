@@ -31,7 +31,7 @@
  * storage space for the interrupt stack of fast_irq
  */
 #if defined(CONFIG_ARC_FIRQ_STACK)
-#if defined(CONFIG_SMP)
+#if defined(CONFIG_ZBLUE_SMP)
 K_KERNEL_STACK_ARRAY_DEFINE(_firq_interrupt_stack, CONFIG_MP_MAX_NUM_CPUS,
 			    CONFIG_ARC_FIRQ_STACK_SIZE);
 #else
@@ -43,7 +43,7 @@ K_KERNEL_STACK_DEFINE(_firq_interrupt_stack, CONFIG_ARC_FIRQ_STACK_SIZE);
  */
 void z_arc_firq_stack_set(void)
 {
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	char *firq_sp = K_KERNEL_STACK_BUFFER(
 		  _firq_interrupt_stack[z_arc_v2_core_id()]) +
 		  CONFIG_ARC_FIRQ_STACK_SIZE;

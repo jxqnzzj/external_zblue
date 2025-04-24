@@ -60,7 +60,7 @@ bool xtensa_is_outside_stack_bounds(uintptr_t addr, size_t sz, uint32_t ps)
 		 */
 		int cpu_id;
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 		cpu_id = arch_curr_cpu()->id;
 #else
 		cpu_id = 0;

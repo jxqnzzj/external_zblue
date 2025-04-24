@@ -1188,7 +1188,7 @@ static bool optee_exchange_caps(const struct device *dev, unsigned long *sec_cap
 	struct arm_smccc_res res = { 0 };
 	unsigned long a1 = 0;
 
-	if (!IS_ENABLED(CONFIG_SMP) || arch_num_cpus() == 1) {
+	if (!IS_ENABLED(CONFIG_ZBLUE_SMP) || arch_num_cpus() == 1) {
 		a1 |= OPTEE_SMC_NSEC_CAP_UNIPROCESSOR;
 	}
 

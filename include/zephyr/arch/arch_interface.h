@@ -472,7 +472,7 @@ void arch_irq_offload_init(void);
  * @ingroup arch-interface
  * @{
  */
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 /** Return the CPU struct for the currently executing CPU */
 static inline struct _cpu *arch_curr_cpu(void);
 
@@ -516,7 +516,7 @@ void arch_sched_directed_ipi(uint32_t cpu_bitmap);
 
 int arch_smp_init(void);
 
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 
 /**
  * @brief Returns the number of CPUs

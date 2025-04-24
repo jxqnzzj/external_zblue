@@ -60,7 +60,7 @@ void arch_secondary_cpu_init(int hartid)
 		}
 	}
 	csr_write(mscratch, &_kernel.cpus[cpu_num]);
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	_kernel.cpus[cpu_num].arch.online = true;
 #endif
 #if defined(CONFIG_MULTITHREADING) && defined(CONFIG_THREAD_LOCAL_STORAGE)
@@ -72,9 +72,9 @@ void arch_secondary_cpu_init(int hartid)
 #ifdef CONFIG_RISCV_PMP
 	z_riscv_pmp_init();
 #endif
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	irq_enable(RISCV_IRQ_MSOFT);
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 #ifdef CONFIG_PLIC_IRQ_AFFINITY
 	/* Enable on secondary cores so that they can respond to PLIC */
 	irq_enable(RISCV_IRQ_MEXT);

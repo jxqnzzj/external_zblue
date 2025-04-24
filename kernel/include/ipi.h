@@ -17,15 +17,15 @@
 	(IS_ENABLED(CONFIG_IPI_OPTIMIZE) ? BIT(cpu_id) : IPI_ALL_CPUS_MASK)
 
 
-/* defined in ipi.c when CONFIG_SMP=y */
-#ifdef CONFIG_SMP
+/* defined in ipi.c when CONFIG_ZBLUE_SMP=y */
+#ifdef CONFIG_ZBLUE_SMP
 void flag_ipi(uint32_t ipi_mask);
 void signal_pending_ipi(void);
 atomic_val_t ipi_mask_create(struct k_thread *thread);
 #else
 #define flag_ipi(ipi_mask) do { } while (false)
 #define signal_pending_ipi() do { } while (false)
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 
 
 #endif /* ZEPHYR_KERNEL_INCLUDE_IPI_H_ */

@@ -131,12 +131,12 @@ z_thread_return_value_set_with_data(struct k_thread *thread,
 	thread->base.swap_data = data;
 }
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 extern void z_smp_init(void);
 #ifdef CONFIG_SYS_CLOCK_EXISTS
 extern void smp_timer_init(void);
 #endif /* CONFIG_SYS_CLOCK_EXISTS */
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 
 extern void z_early_rand_get(uint8_t *buf, size_t length);
 

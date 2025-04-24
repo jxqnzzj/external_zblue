@@ -638,7 +638,7 @@ ZTEST(test_log_api_1cpu, test_log_msg_dropped_notification)
 {
 	log_setup(false);
 
-	if (IS_ENABLED(CONFIG_SMP)) {
+	if (IS_ENABLED(CONFIG_ZBLUE_SMP)) {
 		/* With smp you may not get consistent message dropping as other
 		 * core may process logs.
 		 */

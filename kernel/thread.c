@@ -645,9 +645,9 @@ char *z_setup_new_thread(struct k_thread *new_thread,
 #endif /* CONFIG_SCHED_DEADLINE */
 	new_thread->resource_pool = _current->resource_pool;
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	z_waitq_init(&new_thread->halt_queue);
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 
 #ifdef CONFIG_SCHED_THREAD_USAGE
 	new_thread->base.usage = (struct k_cycle_stats) {};
@@ -764,9 +764,9 @@ void z_init_thread_base(struct _thread_base *thread_base, int priority,
 
 	thread_base->sched_locked = 0U;
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	thread_base->is_idle = 0;
-#endif /* CONFIG_SMP */
+#endif /* CONFIG_ZBLUE_SMP */
 
 #ifdef CONFIG_TIMESLICE_PER_THREAD
 	thread_base->slice_ticks = 0;
@@ -1014,7 +1014,7 @@ int k_thread_runtime_stats_cpu_get(int cpu, k_thread_runtime_stats_t *stats)
 	*stats = (k_thread_runtime_stats_t) {};
 
 #ifdef CONFIG_SCHED_THREAD_USAGE_ALL
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 	z_sched_cpu_usage(cpu, stats);
 #else
 	__ASSERT(cpu == 0, "cpu filter out of bounds");

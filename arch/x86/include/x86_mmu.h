@@ -223,7 +223,7 @@ static inline pentry_t *z_x86_thread_page_tables_get(struct k_thread *thread)
 	return z_x86_kernel_ptables;
 }
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_ZBLUE_SMP
 /* Handling function for TLB shootdown inter-processor interrupts. */
 void z_x86_tlb_ipi(const void *arg);
 #endif

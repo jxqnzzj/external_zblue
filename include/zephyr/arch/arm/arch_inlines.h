@@ -18,7 +18,7 @@ static ALWAYS_INLINE _cpu_t *arch_curr_cpu(void)
 }
 #else
 
-#ifndef CONFIG_SMP
+#ifndef CONFIG_ZBLUE_SMP
 static ALWAYS_INLINE _cpu_t *arch_curr_cpu(void)
 {
 	/* Dummy implementation always return the first cpu */

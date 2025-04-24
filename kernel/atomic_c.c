@@ -90,7 +90,7 @@ bool z_impl_atomic_cas(atomic_t *target, atomic_val_t old_value,
 	 * massive stack overflow. Consider CONFIG_ATOMIC_OPERATIONS_ARCH
 	 * or CONFIG_ATOMIC_OPERATIONS_BUILTIN instead.
 	 */
-	BUILD_ASSERT(!IS_ENABLED(CONFIG_SMP));
+	BUILD_ASSERT(!IS_ENABLED(CONFIG_ZBLUE_SMP));
 
 	key = k_spin_lock(&lock);
 
