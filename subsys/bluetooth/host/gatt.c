@@ -3682,6 +3682,8 @@ static void call_notify_cb_and_maybe_unsubscribe(struct bt_conn *conn, struct ga
 				if (err != 0) {
 					LOG_WRN("Failed to unsubscribe (err %d)", err);
 				}
+			} else {
+				break;
 			}
 		}
 	}
