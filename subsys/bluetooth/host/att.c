@@ -705,6 +705,8 @@ static struct net_buf *bt_att_chan_create_pdu(struct bt_att_chan *chan, uint8_t 
 	case ATT_CONFIRMATION:
 		/* Use a timeout only when responding/confirming */
 		timeout = BT_ATT_TIMEOUT;
+	case ATT_COMMAND:
+		timeout = K_NO_WAIT;
 		break;
 	default:
 		timeout = K_FOREVER;
