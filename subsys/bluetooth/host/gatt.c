@@ -2288,6 +2288,9 @@ ssize_t bt_gatt_attr_write_ccc(struct bt_conn *conn,
 
 	/* Update cfg if don't match */
 	if (cfg->value != ccc->value) {
+#if defined(CONFIG_BLUETOOTH_STACK_LE_ZBLUE)
+		ccc->conn = conn;
+#endif
 		gatt_ccc_changed(attr, ccc);
 	}
 

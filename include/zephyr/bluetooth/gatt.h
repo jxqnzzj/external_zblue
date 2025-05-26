@@ -298,6 +298,9 @@ struct bt_gatt_attr {
 	 *  @sa bt_gatt_discover_func_t about this field.
 	 */
 	uint16_t perm;
+#if defined(CONFIG_BLUETOOTH_STACK_LE_ZBLUE)
+	void *element;
+#endif
 };
 
 /** @brief GATT Service structure */
@@ -981,6 +984,9 @@ struct _bt_gatt_ccc {
 	 */
 	bool (*cfg_match)(struct bt_conn *conn,
 			  const struct bt_gatt_attr *attr);
+#if defined(CONFIG_BLUETOOTH_STACK_LE_ZBLUE)
+	struct bt_conn *conn;
+#endif
 };
 
 /** @brief Read Client Characteristic Configuration Attribute helper.
@@ -1432,6 +1438,8 @@ struct bt_gatt_indicate_params {
 	uint16_t len;
 	/** Private reference counter */
 	uint8_t _ref;
+	/** Private user data pointer */
+	void *user_data;
 #if defined(CONFIG_BT_EATT)
 	enum bt_att_chan_opt chan_opt;
 #endif /* CONFIG_BT_EATT */
