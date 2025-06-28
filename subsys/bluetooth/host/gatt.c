@@ -51,6 +51,8 @@
 #include "gatt_internal.h"
 #include "long_wq.h"
 
+#include "syslog.h"
+#include <execinfo.h>
 #define LOG_LEVEL CONFIG_BT_GATT_LOG_LEVEL
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(bt_gatt);
@@ -3833,8 +3835,12 @@ int bt_gatt_exchange_mtu(struct bt_conn *conn,
 static void gatt_discover_next(struct bt_conn *conn, uint16_t last_handle,
 			       struct bt_gatt_discover_params *params)
 {
+	syslog(LOG_CRIT, "%s: Enter, last_handle=0x%04x, start=0x%04x, end=0x%04x",
+		__func__, last_handle, params->start_handle, params->end_handle);
+
 	/* Skip if last_handle is not set */
 	if (!last_handle) {
+		syslog(LOG_CRIT, "%s: last_handle is 0, starting new discover", __func__);
 		goto discover;
 	}
 
@@ -3842,23 +3848,32 @@ static void gatt_discover_next(struct bt_conn *conn, uint16_t last_handle,
 	params->start_handle = last_handle;
 	if (params->start_handle < UINT16_MAX) {
 		params->start_handle++;
+		syslog(LOG_CRIT, "%s: Continuing discover from handle 0x%04x", __func__, params->start_handle);
 	} else {
+		syslog(LOG_CRIT, "%s: start_handle reached UINT16_MAX, stopping", __func__);
 		goto done;
 	}
 
 	/* Stop if over the range or the requests */
 	if (params->start_handle > params->end_handle) {
+		syslog(LOG_CRIT, "%s: start_handle (0x%04x) > end_handle (0x%04x), stopping",
+			__func__, params->start_handle, params->end_handle);
 		goto done;
 	}
 
 discover:
-	/* Discover next range */
+	syslog(LOG_CRIT, "%s: Calling bt_gatt_discover(start=0x%04x, end=0x%04x)", __func__,
+		params->start_handle, params->end_handle);
 	if (!bt_gatt_discover(conn, params)) {
+		syslog(LOG_CRIT, "%s: bt_gatt_discover returned success", __func__);
 		return;
 	}
 
+	syslog(LOG_CRIT, "%s: bt_gatt_discover failed, calling user callback with NULL", __func__);
+
 done:
 	params->func(conn, NULL, params);
+	syslog(LOG_CRIT, "%s: Exit", __func__);
 }
 
 static void gatt_find_type_rsp(struct bt_conn *conn, int err,
@@ -4202,11 +4217,12 @@ static uint16_t parse_characteristic(struct bt_conn *conn, const void *pdu,
 			break;
 		}
 
-		LOG_DBG("handle 0x%04x uuid %s properties 0x%02x", handle, bt_uuid_str(&u.uuid),
+		syslog(LOG_CRIT, "handle 0x%04x uuid %s properties 0x%02x", handle, bt_uuid_str(&u.uuid),
 			chrc->properties);
 
 		/* Skip if UUID is set but doesn't match */
 		if (params->uuid && bt_uuid_cmp(&u.uuid, params->uuid)) {
+			syslog(LOG_CRIT, "velaBT %s %d", __func__, __LINE__);
 			continue;
 		}
 
@@ -4220,17 +4236,24 @@ static uint16_t parse_characteristic(struct bt_conn *conn, const void *pdu,
 			.handle = handle,
 		};
 
-		if (params->func(conn, &attr, params) == BT_GATT_ITER_STOP) {
+		int ret = params->func(conn, &attr, params);
+		if (ret == BT_GATT_ITER_STOP) {
+			syslog(LOG_CRIT, "velaBT %s:%d - discovery callback returned STOP", __func__, __LINE__);
 			return 0;
+		} else {
+			syslog(LOG_CRIT, "velaBT %s:%d - callback continue, func=%p, handle=0x%04x", 
+				__func__, __LINE__, params->func, attr.handle);
 		}
 	}
 
 	/* Whole PDU read without error */
 	if (length == 0U && handle) {
+		syslog(LOG_CRIT, "velaBT %s %d", __func__, __LINE__);
 		return handle;
 	}
 
 done:
+	syslog(LOG_CRIT, "velaBT %s %d", __func__, __LINE__);
 	params->func(conn, NULL, params);
 	return 0;
 }
@@ -4367,11 +4390,13 @@ static void gatt_read_type_rsp(struct bt_conn *conn, int err,
 		handle = parse_include(conn, pdu, params, length);
 	} else if (params->type == BT_GATT_DISCOVER_CHARACTERISTIC) {
 		handle = parse_characteristic(conn, pdu, params, length);
+		syslog(LOG_CRIT, "velaBT %s %d handle: %d", __func__, __LINE__, handle);
 	} else {
 		handle = parse_read_std_char_desc(conn, pdu, params, length);
 	}
 
 	if (!handle) {
+		syslog(LOG_CRIT, "velaBT %s %d", __func__, __LINE__);
 		return;
 	}
 
@@ -4407,7 +4432,9 @@ static int gatt_read_type_encode(struct net_buf *buf, size_t len,
 static int gatt_read_type(struct bt_conn *conn,
 			  struct bt_gatt_discover_params *params)
 {
-	LOG_DBG("start_handle 0x%04x end_handle 0x%04x", params->start_handle, params->end_handle);
+	syslog(LOG_CRIT, "velabt start_handle 0x%04x end_handle 0x%04x", params->start_handle, params->end_handle);
+
+	dump_stack();
 
 	return gatt_req_send(conn, gatt_read_type_rsp, params,
 			     gatt_read_type_encode, BT_ATT_OP_READ_TYPE_REQ,
