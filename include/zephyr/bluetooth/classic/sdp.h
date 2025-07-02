@@ -756,7 +756,6 @@ int bt_sdp_get_vendor_id(const struct net_buf *buf, uint16_t *vendor_id);
  *  @return 0 on success if product_id found and valid, negative in case any error
  */
 int bt_sdp_get_product_id(const struct net_buf *buf, uint16_t *product_id);
-
 #ifdef __cplusplus
 }
 #endif

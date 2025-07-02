@@ -707,7 +707,10 @@ SHELL_STATIC_SUBCMD_SET_CREATE(br_cmds,
 	SHELL_CMD(l2cap, &l2cap_cmds, HELP_NONE, cmd_default_handler),
 	SHELL_CMD_ARG(oob, NULL, NULL, cmd_oob, 1, 0),
 	SHELL_CMD_ARG(pscan, NULL, "<value: on, off>", cmd_connectable, 2, 0),
-	SHELL_CMD_ARG(sdp-find, NULL, "<HFPAG, HFPHF>", cmd_sdp_find_record, 2, 0),
+	SHELL_CMD_ARG(sdp-find, NULL, "<HFPAG, HFPHF, PNP>", cmd_sdp_find_record, 2, 0),
+	SHELL_CMD_ARG(switch-role, NULL, "<value: central, peripheral>", cmd_switch_role, 2, 0),
+	SHELL_CMD_ARG(set-role-switchable, NULL, "<value: enable, disable>",
+		      cmd_set_role_switchable, 2, 0),
 	SHELL_SUBCMD_SET_END
 );
 
