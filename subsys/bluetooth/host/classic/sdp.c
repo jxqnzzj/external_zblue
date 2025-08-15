@@ -1960,6 +1960,12 @@ static void sdp_client_params_iterator(struct bt_sdp_client *session)
 
 		/* Remove already checked UUID node */
 		sys_slist_remove(&session->reqs, NULL, &param->_node);
+		/* Invalidate cached param in context */
+		session->param = NULL;
+		if (session->rec_buf != NULL) {
+			net_buf_unref(session->rec_buf);
+			session->rec_buf = NULL;
+		}
 		/* Reset continuation state in current context */
 		(void)memset(&session->cstate, 0, sizeof(session->cstate));
 		/* Clear total length */
@@ -2167,7 +2173,11 @@ static int sdp_client_discover(struct bt_sdp_client *session)
 		param = session->param;
 	}
 
-	if (!param) {
+	if (param != NULL && session->rec_buf == NULL) {
+		session->rec_buf = net_buf_alloc(param->pool, K_FOREVER);
+	}
+
+	if (param == NULL || session->rec_buf == NULL) {
 		struct bt_l2cap_chan *chan = &session->chan.chan;
 
 		session->state = SDP_CLIENT_DISCONNECTING;
