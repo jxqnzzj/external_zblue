@@ -109,6 +109,14 @@ struct bt_att_chan {
 	struct k_fifo		tx_queue;
 	struct k_work_delayable	timeout_work;
 	sys_snode_t		node;
+	struct {
+		bool pending;
+		uint8_t req_op;
+		uint8_t rsp_op;
+		uint16_t handle;
+		uint16_t end_handle;
+		uint16_t offset;
+	} async_read_rsp;
 };
 
 static bool bt_att_is_enhanced(struct bt_att_chan *chan)
@@ -1326,6 +1334,8 @@ struct read_type_data {
 	struct bt_att_read_type_rsp *rsp;
 	struct bt_att_data *item;
 	uint8_t err;
+	bool async;
+	uint16_t async_handle;
 };
 
 typedef bool (*attr_read_cb)(struct net_buf *buf, ssize_t read,
@@ -1479,6 +1489,11 @@ static uint8_t read_type_cb(const struct bt_gatt_attr *attr, uint16_t handle,
 	data->item->handle = sys_cpu_to_le16(handle);
 
 	read = att_chan_read(chan, attr, data->buf, 0, attr_read_type_cb, data);
+	if (read == -EINPROGRESS) {
+		data->async = true;
+		data->async_handle = handle;
+		return BT_GATT_ITER_STOP;
+	}
 	if (read < 0) {
 		data->err = err_to_att(read);
 		return BT_GATT_ITER_STOP;
@@ -1515,6 +1530,20 @@ static uint8_t att_read_type_rsp(struct bt_att_chan *chan, struct bt_uuid *uuid,
 	data.err = BT_ATT_ERR_ATTRIBUTE_NOT_FOUND;
 
 	bt_gatt_foreach_attr_mc(hdev->dev_id, start_handle, end_handle, read_type_cb, &data);
+
+	if (data.async) {
+		net_buf_unref(data.buf);
+		/* Async read: app will send response later. Record bearer/opcode context
+		 * so we can respond on the same channel.
+		 */
+		chan->async_read_rsp.pending = true;
+		chan->async_read_rsp.req_op = BT_ATT_OP_READ_TYPE_REQ;
+		chan->async_read_rsp.rsp_op = BT_ATT_OP_READ_TYPE_RSP;
+		chan->async_read_rsp.handle = data.async_handle;
+		chan->async_read_rsp.end_handle = data.async_handle;
+		chan->async_read_rsp.offset = 0U;
+		return 0;
+	}
 
 	if (data.err) {
 		net_buf_unref(data.buf);
@@ -1584,6 +1613,7 @@ static uint8_t att_read_type_req(struct bt_att_chan *chan, struct net_buf *buf)
 
 struct read_data {
 	struct bt_att_chan *chan;
+	uint16_t handle;
 	uint16_t offset;
 	struct net_buf *buf;
 	uint8_t err;
@@ -1622,6 +1652,7 @@ static uint8_t read_cb(const struct bt_gatt_attr *attr, uint16_t handle,
 	ret = att_chan_read(chan, attr, data->buf, data->offset, NULL, NULL);
 
 	if (ret == -EINPROGRESS) {
+		data->handle = handle;
 		data->async = true;
 		return BT_GATT_ITER_STOP;
 	}
@@ -1677,7 +1708,16 @@ static uint8_t att_read_rsp(struct bt_att_chan *chan, uint8_t op, uint8_t rsp,
 
 	if (data.async) {
 		net_buf_unref(data.buf);
-		/* Async read: release buffer, app send response later */
+		/* Async read: app will send response later (possibly on EATT).
+		 * Record the bearer/opcode context so we can respond on the same channel.
+		 */
+		chan->async_read_rsp.pending = true;
+		chan->async_read_rsp.req_op = op;
+		chan->async_read_rsp.rsp_op = rsp;
+		chan->async_read_rsp.handle = handle;
+		chan->async_read_rsp.end_handle = handle;
+		chan->async_read_rsp.offset = offset;
+		/* No response sent here. */
 		return 0;
 	}
 
@@ -1813,6 +1853,11 @@ static uint8_t read_vl_cb(const struct bt_gatt_attr *attr, uint16_t handle,
 	rsp = net_buf_add(data->buf, sizeof(*rsp));
 
 	read = att_chan_read(chan, attr, data->buf, data->offset, NULL, NULL);
+	if (read == -EINPROGRESS) {
+		data->handle = handle;
+		data->async = true;
+		return BT_GATT_ITER_STOP;
+	}
 	if (read < 0) {
 		data->err = err_to_att(read);
 		return BT_GATT_ITER_STOP;
@@ -1858,6 +1903,18 @@ static uint8_t att_read_mult_vl_req(struct bt_att_chan *chan, struct net_buf *bu
 
 		bt_gatt_foreach_attr_mc(hdev->dev_id, handle, handle, read_vl_cb, &data);
 
+		if (data.async) {
+			net_buf_unref(data.buf);
+			/* Async read: app will send response later. */
+			chan->async_read_rsp.pending = true;
+			chan->async_read_rsp.req_op = BT_ATT_OP_READ_MULT_VL_REQ;
+			chan->async_read_rsp.rsp_op = BT_ATT_OP_READ_MULT_VL_RSP;
+			chan->async_read_rsp.handle = data.handle;
+			chan->async_read_rsp.end_handle = data.handle;
+			chan->async_read_rsp.offset = data.offset;
+			return 0;
+		}
+
 		/* Stop reading in case of error */
 		if (data.err) {
 			net_buf_unref(data.buf);
@@ -1880,6 +1937,8 @@ struct read_group_data {
 	struct net_buf *buf;
 	struct bt_att_read_group_rsp *rsp;
 	struct bt_att_group_data *group;
+	bool async;
+	uint16_t async_handle;
 };
 
 static bool attr_read_group_cb(struct net_buf *frag, ssize_t read,
@@ -1906,6 +1965,19 @@ static uint8_t read_group_cb(const struct bt_gatt_attr *attr, uint16_t handle,
 	struct read_group_data *data = user_data;
 	struct bt_att_chan *chan = data->chan;
 	int read;
+
+	/* If we are waiting on an async read for the current group value, keep
+	 * iterating only to determine the end_handle. Stop when the next grouping
+	 * attribute is reached.
+	 */
+	if (data->async) {
+		if (bt_uuid_cmp(attr->uuid, BT_UUID_GATT_PRIMARY) == 0 ||
+		    bt_uuid_cmp(attr->uuid, BT_UUID_GATT_SECONDARY) == 0) {
+			if (handle != data->async_handle) {
+				return BT_GATT_ITER_STOP;
+			}
+		}
+	}
 
 	/* Update group end_handle if attribute is not a service */
 	if (bt_uuid_cmp(attr->uuid, BT_UUID_GATT_PRIMARY) &&
@@ -1941,6 +2013,11 @@ static uint8_t read_group_cb(const struct bt_gatt_attr *attr, uint16_t handle,
 	/* Read attribute value and store in the buffer */
 	read = att_chan_read(chan, attr, data->buf, 0, attr_read_group_cb,
 			     data);
+	if (read == -EINPROGRESS) {
+		data->async = true;
+		data->async_handle = handle;
+		return BT_GATT_ITER_CONTINUE;
+	}
 	if (read < 0) {
 		/* TODO: Handle read errors */
 		return BT_GATT_ITER_STOP;
@@ -1974,6 +2051,22 @@ static uint8_t att_read_group_rsp(struct bt_att_chan *chan, struct bt_uuid *uuid
 	data.group = NULL;
 
 	bt_gatt_foreach_attr_mc(hdev->dev_id, start_handle, end_handle, read_group_cb, &data);
+
+	if (data.async) {
+		uint16_t async_end_handle = data.async_handle;
+		if (data.group) {
+			async_end_handle = sys_le16_to_cpu(data.group->end_handle);
+		}
+		net_buf_unref(data.buf);
+		/* Async read: app will send response later. */
+		chan->async_read_rsp.pending = true;
+		chan->async_read_rsp.req_op = BT_ATT_OP_READ_GROUP_REQ;
+		chan->async_read_rsp.rsp_op = BT_ATT_OP_READ_GROUP_RSP;
+		chan->async_read_rsp.handle = data.async_handle;
+		chan->async_read_rsp.end_handle = async_end_handle;
+		chan->async_read_rsp.offset = 0U;
+		return 0;
+	}
 
 	if (!data.rsp->len) {
 		net_buf_unref(data.buf);
@@ -4191,6 +4284,142 @@ bool bt_att_chan_opt_valid(struct bt_conn *conn, enum bt_att_chan_opt chan_opt)
 	}
 
 	return true;
+}
+
+int bt_att_server_send_read_rsp(struct bt_conn *conn, int err, uint16_t handle,
+				 const void *data, uint16_t length)
+{
+	__ASSERT_NO_MSG(conn);
+	__ASSERT_NO_MSG(err <= 0);
+
+	if (conn->state != BT_CONN_CONNECTED) {
+		return -ENOTCONN;
+	}
+
+	struct bt_att *att = att_get(conn);
+	if (!att) {
+		return -ENOTCONN;
+	}
+
+	struct bt_att_chan *chan;
+	SYS_SLIST_FOR_EACH_CONTAINER(&att->chans, chan, node) {
+		if (!chan->async_read_rsp.pending) {
+			continue;
+		}
+		if (chan->async_read_rsp.handle != handle) {
+			continue;
+		}
+
+		const uint8_t req_op = chan->async_read_rsp.req_op;
+		const uint8_t rsp_op = chan->async_read_rsp.rsp_op;
+		const uint16_t rsp_end_handle = chan->async_read_rsp.end_handle;
+
+		if (err != 0) {
+			const uint8_t att_err = (uint8_t)(-err);
+			struct bt_att_error_rsp *rsp;
+			struct net_buf *buf;
+
+			buf = bt_att_chan_create_pdu(chan, BT_ATT_OP_ERROR_RSP, sizeof(*rsp));
+			if (!buf) {
+				return -ENOMEM;
+			}
+
+			rsp = net_buf_add(buf, sizeof(*rsp));
+			rsp->request = req_op;
+			rsp->handle = sys_cpu_to_le16(handle);
+			rsp->error = att_err;
+
+			bt_att_chan_send_rsp(chan, buf);
+			chan->async_read_rsp.pending = false;
+			return 0;
+		}
+
+		const uint16_t mtu = bt_att_mtu(chan);
+		const uint16_t max_payload = (mtu > 1U) ? (mtu - 1U) : 0U;
+		size_t required = 0U;
+		switch (rsp_op) {
+		case BT_ATT_OP_READ_RSP:
+		case BT_ATT_OP_READ_BLOB_RSP:
+			required = length;
+			break;
+		case BT_ATT_OP_READ_TYPE_RSP:
+			required = sizeof(struct bt_att_read_type_rsp) +
+				   sizeof(struct bt_att_data) + length;
+			break;
+		case BT_ATT_OP_READ_GROUP_RSP:
+			required = sizeof(struct bt_att_read_group_rsp) +
+				   sizeof(struct bt_att_group_data) + length;
+			break;
+		case BT_ATT_OP_READ_MULT_VL_RSP:
+			required = sizeof(struct bt_att_read_mult_vl_rsp) + length;
+			break;
+		default:
+			return -ENOTSUP;
+		}
+
+		if (required > max_payload) {
+			return -EMSGSIZE;
+		}
+
+		struct net_buf *buf = bt_att_create_rsp_pdu(chan, rsp_op);
+		if (!buf) {
+			return -ENOMEM;
+		}
+
+		switch (rsp_op) {
+		case BT_ATT_OP_READ_RSP:
+		case BT_ATT_OP_READ_BLOB_RSP:
+			if (data && length) {
+				net_buf_add_mem(buf, data, length);
+			}
+			break;
+		case BT_ATT_OP_READ_TYPE_RSP: {
+			struct bt_att_read_type_rsp *type_rsp;
+			struct bt_att_data *item;
+
+			type_rsp = net_buf_add(buf, sizeof(*type_rsp));
+			type_rsp->len = (uint8_t)(length + sizeof(*item));
+			item = net_buf_add(buf, sizeof(*item));
+			item->handle = sys_cpu_to_le16(handle);
+			if (data && length) {
+				net_buf_add_mem(buf, data, length);
+			}
+			break;
+		}
+		case BT_ATT_OP_READ_GROUP_RSP: {
+			struct bt_att_read_group_rsp *group_rsp;
+			struct bt_att_group_data *group;
+
+			group_rsp = net_buf_add(buf, sizeof(*group_rsp));
+			group_rsp->len = (uint8_t)(length + sizeof(*group));
+			group = net_buf_add(buf, sizeof(*group));
+			group->start_handle = sys_cpu_to_le16(handle);
+			group->end_handle = sys_cpu_to_le16(rsp_end_handle);
+			if (data && length) {
+				net_buf_add_mem(buf, data, length);
+			}
+			break;
+		}
+		case BT_ATT_OP_READ_MULT_VL_RSP: {
+			struct bt_att_read_mult_vl_rsp *vl_rsp;
+			vl_rsp = net_buf_add(buf, sizeof(*vl_rsp));
+			vl_rsp->len = sys_cpu_to_le16(length);
+			if (data && length) {
+				net_buf_add_mem(buf, data, length);
+			}
+			break;
+		}
+		default:
+			/* Not reachable due to switch above. */
+			break;
+		}
+
+		bt_att_chan_send_rsp(chan, buf);
+		chan->async_read_rsp.pending = false;
+		return 0;
+	}
+
+	return -ENOENT;
 }
 
 int bt_gatt_authorization_cb_register_mc(uint8_t dev_id, const struct bt_gatt_authorization_cb *cb)

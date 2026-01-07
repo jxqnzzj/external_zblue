@@ -349,3 +349,17 @@ bool bt_att_tx_meta_data_match(const struct net_buf *buf, bt_gatt_complete_func_
 bool bt_att_chan_opt_valid(struct bt_conn *conn, enum bt_att_chan_opt chan_opt);
 
 void bt_gatt_req_set_mtu(struct bt_att_req *req, uint16_t mtu);
+
+/*
+ * Send an asynchronous server-side response to a pending Read/Read Blob request.
+ *
+ * This is used when an attribute read callback returns -EINPROGRESS.
+ * The ATT bearer (UATT/EATT) that carried the request is tracked internally.
+ *
+ * Returns:
+ *  - 0 on success
+ *  - -ENOENT if no matching pending request exists
+ *  - a negative errno on other failures
+ */
+int bt_att_server_send_read_rsp(struct bt_conn *conn, int err, uint16_t handle,
+				 const void *data, uint16_t length);

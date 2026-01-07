@@ -149,8 +149,8 @@ struct bt_gatt_attr;
  *
  *  @note If this function returns ``-EINPROGRESS``, the read operation
  *  is deferred and the application must later send the response
- *  using @ref bt_gatt_send_read_rsp(). Deferred responses are only
- *  supported when no EATT bearers are established for this connection.
+ *  using @ref bt_gatt_send_read_rsp(). The stack will reply on the same
+ *  ATT bearer/channel that received the original request.
  *
  *  @note The application must send the deferred response before the ATT
  *  timeout expires, otherwise the bearer will be terminated.
@@ -1931,17 +1931,24 @@ int bt_gatt_read(struct bt_conn *conn, struct bt_gatt_read_params *params);
 
 /** @brief Send a deferred Read Response
  *
- *  Used when an attribute read request was deferred (attr->read returned
- *  -EINPROGRESS). The application later completes the read operation
- *  by providing either a value (success) or error code via this API.
+ *  Used when a server-side attribute read request was deferred
+ *  (attr->read returned -EINPROGRESS). The application later completes the
+ *  read operation by providing either a value (success) or error code via
+ *  this API.
  *
- *  Deferred responses are only supported when no EATT bearers are
- *  established for this connection.
+ *  This API is unified for all ATT read-type requests that may use
+ *  attr->read, e.g. Read / Read Blob / Read By Type / Read By Group Type /
+ *  Read Multiple Variable Length.
+ *
+ *  The stack will reply on the same ATT bearer/channel that received the
+ *  original request (EATT-safe), using internally recorded request context.
  *
  *  @param conn   Connection object.
  *  @param err    Error value created with BT_GATT_ERR() using a specific
  *                BT_ATT_ERR_* code, or 0 for success.
- *  @param handle The attribute handle that's being read.
+ *  @param handle The attribute handle associated with the deferred read.
+ *                Used for matching the pending request and for response
+ *                formats that include a handle.
  *  @param data   Pointer to the attribute value buffer.
  *  @param length Length of the attribute value.
  *
@@ -1950,7 +1957,8 @@ int bt_gatt_read(struct bt_conn *conn, struct bt_gatt_read_params *params);
  *  @retval -ENOTCONN The connection is not established.
  *  @retval -EINVAL Invalid parameters.
  *  @retval -ENOMEM Out of memory.
- *  @retval -ENOTSUP EATT deferred responses not supported.
+ *  @retval -EMSGSIZE Response payload does not fit within ATT_MTU.
+ *  @retval -ENOENT No pending deferred read response matches this request.
  */
 int bt_gatt_send_read_rsp(struct bt_conn *conn, int err, uint16_t handle,
 			      const void *data, uint16_t length);
