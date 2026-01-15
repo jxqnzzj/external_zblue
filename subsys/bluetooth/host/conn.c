@@ -1439,6 +1439,11 @@ struct bt_conn *bt_hci_conn_lookup_handle_mc(uint8_t dev_id, uint16_t handle)
 		return NULL;
 	}
 
+	if (!atomic_test_bit(hdev->flags, BT_DEV_READY)) {
+		LOG_WRN("%s: dev %u not ready", __func__, dev_id);
+		return NULL;
+	}
+
 	return bt_conn_lookup_handle(hdev, handle, BT_CONN_TYPE_ALL);
 }
 
@@ -1451,6 +1456,11 @@ void bt_conn_foreach_mc(uint8_t dev_id, enum bt_conn_type type,
 
 	hdev = bt_dev_get(dev_id);
 	if (hdev == NULL) {
+		return;
+	}
+
+	if (!atomic_test_bit(hdev->flags, BT_DEV_READY)) {
+		LOG_WRN("%s: dev %u not ready", __func__, dev_id);
 		return;
 	}
 
@@ -2452,6 +2462,11 @@ struct bt_conn *bt_conn_lookup_addr_br_mc(uint8_t dev_id, const bt_addr_t *peer)
 		return NULL;
 	}
 
+	if (!atomic_test_bit(hdev->flags, BT_DEV_READY)) {
+		LOG_WRN("%s: dev %u not ready", __func__, dev_id);
+		return NULL;
+	}
+
 	for (i = 0; i < ARRAY_SIZE(hdev->conn_ctx->acl_conns); i++) {
 		struct bt_conn *conn = bt_conn_ref(&hdev->conn_ctx->acl_conns[i]);
 
@@ -2840,6 +2855,11 @@ struct bt_conn *bt_conn_pair_br_mc(uint8_t dev_id, bt_addr_t *bdaddr, bt_securit
 
 	hdev = bt_dev_get(dev_id);
 	if (!hdev) {
+		return NULL;
+	}
+
+	if (!atomic_test_bit(hdev->flags, BT_DEV_READY)) {
+		LOG_WRN("%s: dev %u not ready", __func__, dev_id);
 		return NULL;
 	}
 
@@ -3848,6 +3868,7 @@ int bt_conn_le_create_auto_mc(uint8_t dev_id, const struct bt_conn_le_create_par
 	}
 
 	if (!atomic_test_bit(hdev->flags, BT_DEV_READY)) {
+		LOG_WRN("%s: dev %u not ready", __func__, dev_id);
 		return -EAGAIN;
 	}
 
@@ -4014,7 +4035,12 @@ int bt_conn_le_create_mc(uint8_t dev_id, const bt_addr_le_t *peer, const struct 
 	if (!hdev) {
 		return -ENODEV;
 	}
-	
+
+	if (!atomic_test_bit(hdev->flags, BT_DEV_READY)) {
+		LOG_WRN("%s: dev %u not ready", __func__, dev_id);
+		return -EAGAIN;
+	}
+
 	CHECKIF(ret_conn == NULL) {
 		return -EINVAL;
 	}
@@ -4163,6 +4189,7 @@ int bt_le_set_auto_conn_mc(uint8_t dev_id, const bt_addr_le_t *addr,
 	}
 
 	if (!atomic_test_bit(hdev->flags, BT_DEV_READY)) {
+		LOG_WRN("%s: dev %u not ready", __func__, dev_id);
 		return -EAGAIN;
 	}
 
