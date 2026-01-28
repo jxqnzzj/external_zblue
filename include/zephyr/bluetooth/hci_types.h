@@ -626,6 +626,21 @@ struct bt_hci_write_local_name {
 	uint8_t local_name[248];
 } __packed;
 
+#define BT_HCI_OP_READ_AFH_CHANNEL_ASSESSMENT_MODE  BT_OP(BT_OGF_BASEBAND, 0x0048) /* 0x0c48 */
+struct bt_hci_rp_read_afh_channel_assessment_mode {
+	uint8_t  status;
+	uint8_t  mode;
+} __packed;
+
+#define BT_HCI_OP_WRITE_AFH_CHANNEL_ASSESSMENT_MODE BT_OP(BT_OGF_BASEBAND, 0x0049) /* 0x0c49 */
+struct bt_hci_cp_write_afh_channel_assessment_mode {
+	uint8_t  mode;
+} __packed;
+
+struct bt_hci_rp_write_afh_channel_assessment_mode {
+	uint8_t  status;
+} __packed;
+
 #define BT_HCI_OP_READ_CONN_ACCEPT_TIMEOUT      BT_OP(BT_OGF_BASEBAND, 0x0015) /* 0x0c15 */
 struct bt_hci_rp_read_conn_accept_timeout {
 	uint8_t  status;

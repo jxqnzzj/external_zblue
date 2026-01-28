@@ -870,6 +870,7 @@ int bt_br_init(struct bt_dev *hdev)
 	struct net_buf *buf;
 	struct bt_hci_cp_write_ssp_mode *ssp_cp;
 	struct bt_hci_cp_write_inquiry_mode *inq_cp;
+	struct bt_hci_cp_write_afh_channel_assessment_mode *afh_cp;
 	struct bt_hci_cp_write_default_link_policy_settings *policy_cp;
 	int err;
 
@@ -941,6 +942,19 @@ int bt_br_init(struct bt_dev *hdev)
 	net_buf_add_le16(buf, CONFIG_BT_CONN_ACCEPT_TIMEOUT);
 
 	err = bt_hci_cmd_send_sync(hdev, BT_HCI_OP_WRITE_CONN_ACCEPT_TIMEOUT, buf, NULL);
+	if (err) {
+		return err;
+	}
+
+	/* Configure AFH Channel Assessment Mode */
+	buf = bt_hci_cmd_create(BT_HCI_OP_WRITE_AFH_CHANNEL_ASSESSMENT_MODE, sizeof(*afh_cp));
+	if (!buf) {
+		return -ENOBUFS;
+	}
+
+	afh_cp = net_buf_add(buf, sizeof(*afh_cp));
+	afh_cp->mode = 0x01; /* Controller channel assessment enabled */
+	err = bt_hci_cmd_send_sync(hdev, BT_HCI_OP_WRITE_AFH_CHANNEL_ASSESSMENT_MODE, buf, NULL);
 	if (err) {
 		return err;
 	}
