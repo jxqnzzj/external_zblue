@@ -870,8 +870,6 @@ int bt_br_init(struct bt_dev *hdev)
 	struct net_buf *buf;
 	struct bt_hci_cp_write_ssp_mode *ssp_cp;
 	struct bt_hci_cp_write_inquiry_mode *inq_cp;
-	struct bt_hci_write_local_name *name_cp;
-	struct bt_hci_cp_write_class_of_device *cod;
 	struct bt_hci_cp_write_default_link_policy_settings *policy_cp;
 	int err;
 
@@ -921,33 +919,6 @@ int bt_br_init(struct bt_dev *hdev)
 		return err;
 	}
 
-	/* Set local name */
-	buf = bt_hci_cmd_create(BT_HCI_OP_WRITE_LOCAL_NAME, sizeof(*name_cp));
-	if (!buf) {
-		return -ENOBUFS;
-	}
-
-	name_cp = net_buf_add(buf, sizeof(*name_cp));
-	strncpy((char *)name_cp->local_name, CONFIG_BT_DEVICE_NAME, sizeof(name_cp->local_name));
-
-	err = bt_hci_cmd_send_sync(hdev, BT_HCI_OP_WRITE_LOCAL_NAME, buf, NULL);
-	if (err) {
-		return err;
-	}
-
-	/* Set Class of device */
-	buf = bt_hci_cmd_create(BT_HCI_OP_WRITE_CLASS_OF_DEVICE, sizeof(*cod));
-	if (!buf) {
-		return -ENOBUFS;
-	}
-
-	net_buf_add_le24(buf, CONFIG_BT_COD);
-
-	err = bt_hci_cmd_send_sync(hdev, BT_HCI_OP_WRITE_CLASS_OF_DEVICE, buf, NULL);
-	if (err) {
-		return err;
-	}
-
 	/* Set page timeout*/
 	buf = bt_hci_cmd_create(BT_HCI_OP_WRITE_PAGE_TIMEOUT, sizeof(uint16_t));
 	if (!buf) {
@@ -989,7 +960,8 @@ int bt_br_init(struct bt_dev *hdev)
 	policy_cp->default_link_policy_settings =
 		BT_HCI_LINK_POLICY_SETTINGS_ENABLE_ROLE_SWITCH |
 		BT_HCI_LINK_POLICY_SETTINGS_ENABLE_HOLD_MODE |
-		BT_HCI_LINK_POLICY_SETTINGS_ENABLE_SNIFF_SWITCH;
+		BT_HCI_LINK_POLICY_SETTINGS_ENABLE_SNIFF_SWITCH |
+		BT_HCI_LINK_POLICY_SETTINGS_ENABLE_PARK_MODE;
 
 	err = bt_hci_cmd_send_sync(hdev, BT_HCI_OP_WRITE_DEFAULT_LINK_POLICY_SETTINGS, buf, NULL);
 	if (err) {
