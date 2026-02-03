@@ -4607,18 +4607,6 @@ int bt_disable_mc(uint8_t dev_id)
 	disconnected_handles_reset(hdev);
 #endif /* CONFIG_BT_CONN */
 
-	/* Reset the Controller */
-	if (!drv_quirk_no_reset(hdev)) {
-
-		err = bt_hci_cmd_send_sync(hdev, BT_HCI_OP_RESET, NULL, NULL);
-		if (err) {
-			LOG_ERR("Failed to reset BLE controller");
-			return err;
-		}
-
-		hci_reset_complete(hdev);
-	}
-
 #if DT_HAS_CHOSEN(zephyr_bt_hci)
 	err = bt_hci_close(hdev->hci);
 	if (err == -ENOSYS) {
