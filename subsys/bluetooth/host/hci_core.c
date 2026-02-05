@@ -4809,6 +4809,45 @@ bool bt_addr_le_is_bonded(struct bt_dev *hdev, uint8_t id, const bt_addr_le_t *a
 	}
 }
 
+int bt_le_identity_addr_get_mc(uint8_t dev_id, uint8_t id, const bt_addr_le_t *addr,
+			      bt_addr_le_t *id_addr)
+{
+	struct bt_dev *hdev;
+
+	if (!addr || !id_addr) {
+		return -EINVAL;
+	}
+
+	if (id >= CONFIG_BT_ID_MAX) {
+		return -EINVAL;
+	}
+
+	hdev = bt_dev_get(dev_id);
+	if (!hdev) {
+		return -ENODEV;
+	}
+
+	if (!atomic_test_bit(hdev->flags, BT_DEV_READY)) {
+		return -EAGAIN;
+	}
+
+#if defined(CONFIG_BT_OBSERVER) || defined(CONFIG_BT_BROADCASTER)
+	{
+		const bt_addr_le_t *found;
+
+		found = bt_lookup_id_addr(hdev, id, addr);
+		if (!found) {
+			return -EINVAL;
+		}
+
+		bt_addr_le_copy(id_addr, found);
+	}
+#else
+	bt_addr_le_copy(id_addr, addr);
+#endif
+	return 0;
+}
+
 #if defined(CONFIG_BT_FILTER_ACCEPT_LIST)
 int bt_le_filter_accept_list_add_mc(uint8_t dev_id, const bt_addr_le_t *addr)
 {

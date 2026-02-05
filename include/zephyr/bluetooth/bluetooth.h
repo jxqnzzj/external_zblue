@@ -2632,6 +2632,33 @@ static inline void bt_le_scan_cb_unregister(struct bt_le_scan_cb *cb)
 #endif
 
 /**
+ * @brief Get peer LE identity address.
+ *
+ * Convert a peer LE address to its identity address when possible.
+ * If @p addr is a Resolvable Private Address (RPA) and can be resolved,
+ * the corresponding identity address will be returned in @p id_addr.
+ * Otherwise, @p id_addr will be a copy of @p addr.
+ *
+ * @param id Bluetooth identity identifier.
+ * @param addr Peer Bluetooth LE address (may be an RPA).
+ * @param id_addr Output identity address.
+ *
+ * @retval 0 Success.
+ * @retval -EAGAIN Bluetooth is not ready.
+ * @retval -EINVAL Invalid arguments.
+ * @retval -ENODEV Bluetooth device not found.
+ */
+int bt_le_identity_addr_get_mc(uint8_t dev_id, uint8_t id, const bt_addr_le_t *addr,
+			       bt_addr_le_t *id_addr);
+#ifdef CONFIG_BT_ORIGINAL_API
+static inline int bt_le_identity_addr_get(uint8_t id, const bt_addr_le_t *addr,
+				 bt_addr_le_t *id_addr)
+{
+	return bt_le_identity_addr_get_mc(0, id, addr, id_addr);
+}
+#endif
+
+/**
  * @brief Add device (LE) to filter accept list.
  *
  * Add peer device LE address to the filter accept list.
