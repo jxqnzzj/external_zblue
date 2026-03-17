@@ -391,6 +391,28 @@ static inline void bt_id_get(bt_addr_le_t *addrs, size_t *count)
 #endif
 
 /**
+ * @brief Set the default identity address.
+ *
+ * Override the default identity address (BT_ID_DEFAULT) with the given
+ * address. If the address type is random static, the HCI LE Set Random
+ * Address command is sent to the controller.
+ *
+ * @note This should be called after bt_enable(). The address must be a
+ * valid public or random static address.
+ *
+ * @param addr Address to set as the default identity.
+ *
+ * @return 0 on success, negative error code on failure.
+ */
+int bt_id_set_default_addr_mc(uint8_t dev_id, const bt_addr_le_t *addr);
+#ifdef CONFIG_BT_ORIGINAL_API
+static inline int bt_id_set_default_addr(const bt_addr_le_t *addr)
+{
+	return bt_id_set_default_addr_mc(0, addr);
+}
+#endif
+
+/**
  * @brief Create a new identity.
  *
  * Create a new identity using the given address and IRK. This function can be

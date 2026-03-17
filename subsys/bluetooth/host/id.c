@@ -1280,6 +1280,100 @@ void bt_id_get_mc(uint8_t dev_id, bt_addr_le_t *addrs, size_t *count)
 	}
 }
 
+int bt_id_set_default_addr_mc(uint8_t dev_id, const bt_addr_le_t *addr)
+{
+	struct bt_dev *hdev = bt_dev_get(dev_id);
+	struct bt_le_ext_adv *adv = NULL;
+	bool adv_enabled = false;
+	int err;
+
+	if (!hdev || !addr) {
+		return -EINVAL;
+	}
+
+	if (addr->type == BT_ADDR_LE_RANDOM) {
+		if (!BT_ADDR_IS_STATIC(&addr->a)) {
+			LOG_ERR("Only random static address supported");
+			return -EINVAL;
+		}
+	} else if (addr->type != BT_ADDR_LE_PUBLIC) {
+		return -EINVAL;
+	}
+
+	/* Pause scan before changing address (same pattern as
+	 * le_update_private_addr).
+	 */
+#if defined(CONFIG_BT_OBSERVER)
+	bool scan_enabled = false;
+
+	if (atomic_test_bit(hdev->flags, BT_DEV_SCANNING)) {
+		bt_le_scan_set_enable(hdev, BT_HCI_LE_SCAN_DISABLE);
+		scan_enabled = true;
+	}
+#endif
+
+	if (IS_ENABLED(CONFIG_BT_CENTRAL) &&
+	    atomic_test_bit(hdev->flags, BT_DEV_INITIATING)) {
+		bt_le_create_conn_cancel(hdev);
+	}
+
+	/* Pause legacy advertising */
+	if (IS_ENABLED(CONFIG_BT_BROADCASTER) &&
+	    !(IS_ENABLED(CONFIG_BT_EXT_ADV) &&
+	      BT_DEV_FEAT_LE_EXT_ADV(hdev->le.features))) {
+		adv = bt_le_adv_lookup_legacy(hdev);
+
+		if (adv && atomic_test_bit(adv->flags, BT_ADV_ENABLED)) {
+			adv_enabled = true;
+			bt_le_adv_set_enable_legacy(adv, false);
+		}
+	}
+
+	/* Pause ext advertising */
+	if (IS_ENABLED(CONFIG_BT_BROADCASTER) &&
+	    IS_ENABLED(CONFIG_BT_EXT_ADV) &&
+	    BT_DEV_FEAT_LE_EXT_ADV(hdev->le.features)) {
+		bt_le_ext_adv_foreach(hdev, adv_pause_enabled, NULL);
+	}
+
+	/* Set the address */
+	if (addr->type == BT_ADDR_LE_RANDOM) {
+		err = set_random_address(hdev, &addr->a);
+		if (err) {
+			goto resume;
+		}
+	}
+
+	bt_addr_le_copy(&hdev->id_addr[BT_ID_DEFAULT], addr);
+
+	if (hdev->id_count == 0) {
+		hdev->id_count = 1;
+	}
+
+	err = 0;
+
+resume:
+	/* Resume ext advertising */
+	if (IS_ENABLED(CONFIG_BT_BROADCASTER) &&
+	    IS_ENABLED(CONFIG_BT_EXT_ADV) &&
+	    BT_DEV_FEAT_LE_EXT_ADV(hdev->le.features)) {
+		bt_le_ext_adv_foreach(hdev, adv_unpause_enabled, NULL);
+	}
+
+	/* Resume legacy advertising */
+	if (IS_ENABLED(CONFIG_BT_BROADCASTER) && adv && adv_enabled) {
+		bt_le_adv_set_enable_legacy(adv, true);
+	}
+
+#if defined(CONFIG_BT_OBSERVER)
+	if (scan_enabled) {
+		bt_le_scan_set_enable(hdev, BT_HCI_LE_SCAN_ENABLE);
+	}
+#endif
+
+	return err;
+}
+
 static int id_find(struct bt_dev *hdev, const bt_addr_le_t *addr)
 {
 	uint8_t id;
