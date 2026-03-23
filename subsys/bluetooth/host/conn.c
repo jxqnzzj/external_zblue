@@ -2562,6 +2562,11 @@ int bt_conn_accept_acl_conn(struct bt_conn *conn)
 {
 	int err;
 
+	if (atomic_test_and_set_bit(conn->flags, BT_CONN_BR_ACL_REPLIED)) {
+		LOG_WRN("ACL conn already replied");
+		return -EALREADY;
+	}
+
 	err = bt_accept_conn(conn->hdev, &conn->br.dst);
 	if (err) {
 		bt_conn_unref(conn);
@@ -2577,6 +2582,11 @@ int bt_conn_accept_acl_conn(struct bt_conn *conn)
 
 int bt_conn_reject_acl_conn(struct bt_conn *conn, uint8_t reason)
 {
+	if (atomic_test_and_set_bit(conn->flags, BT_CONN_BR_ACL_REPLIED)) {
+		LOG_WRN("ACL conn already replied");
+		return -EALREADY;
+	}
+
 	bt_reject_conn(conn->hdev, &conn->br.dst, reason);
 	bt_conn_unref(conn);
 
