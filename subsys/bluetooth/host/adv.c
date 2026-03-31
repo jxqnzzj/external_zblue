@@ -2227,26 +2227,6 @@ void bt_hci_le_adv_set_terminated(struct bt_dev *hdev, struct net_buf *buf)
 
 	atomic_clear_bit(adv->flags, BT_ADV_ENABLED);
 
-#if defined(CONFIG_BT_CONN) && (CONFIG_BT_EXT_ADV_MAX_ADV_SET > 1)
-	hdev->adv_conn_id = adv->id;
-	for (int i = 0; i < ARRAY_SIZE(hdev->cached_conn_complete); i++) {
-		if (hdev->cached_conn_complete[i].valid &&
-		    hdev->cached_conn_complete[i].evt.handle == evt->conn_handle) {
-			if (was_adv_enabled) {
-				/* Process the cached connection complete event
-				 * now that the corresponding advertising set is known.
-				 *
-				 * If the advertiser has been stopped before the connection
-				 * complete event has been raised to the application, we
-				 * discard the event.
-				 */
-				bt_hci_le_enh_conn_complete(hdev, &hdev->cached_conn_complete[i].evt);
-			}
-			hdev->cached_conn_complete[i].valid = false;
-		}
-	}
-#endif
-
 	if (evt->status && IS_ENABLED(CONFIG_BT_PERIPHERAL) &&
 	    atomic_test_bit(adv->flags, BT_ADV_CONNECTABLE)) {
 		/* This will call connected callback for high duty cycle
@@ -2284,7 +2264,28 @@ void bt_hci_le_adv_set_terminated(struct bt_dev *hdev, struct net_buf *buf)
 			}
 
 			bt_conn_unref(conn);
+		} else if (adv->cb && adv->cb->connected) {
+			/* conn not yet created (cached path): notify ADV_STOPPED first. */
+			struct bt_le_ext_adv_connected_info info = {
+				.conn = NULL,
+			};
+
+			adv->cb->connected(adv, &info);
 		}
+
+#if defined(CONFIG_BT_CONN) && (CONFIG_BT_EXT_ADV_MAX_ADV_SET > 1)
+		hdev->adv_conn_id = adv->id;
+		for (int i = 0; i < ARRAY_SIZE(hdev->cached_conn_complete); i++) {
+			if (hdev->cached_conn_complete[i].valid &&
+			    hdev->cached_conn_complete[i].evt.handle == evt->conn_handle) {
+				if (was_adv_enabled) {
+					/* Process cached connection complete after ADV_STOPPED callback. */
+					bt_hci_le_enh_conn_complete(hdev, &hdev->cached_conn_complete[i].evt);
+				}
+				hdev->cached_conn_complete[i].valid = false;
+			}
+		}
+#endif
 	}
 
 	if (atomic_test_and_clear_bit(adv->flags, BT_ADV_LIMITED)) {
